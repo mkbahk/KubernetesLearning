@@ -1,0 +1,78 @@
+apiVersion: graphcore.ai/v1alpha1
+kind: IPUJob
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"graphcore.ai/v1alpha1","kind":"IPUJob","metadata":{"annotations":{},"name":"interactive-sample-job","namespace":"default"},"spec":{"interactive":{"ttl":3600},"ipusPerModelReplica":"1","modelReplicas":"4","workers":{"replicas":1,"template":{"metadata":{"labels":{"app":"resnet-launcher"}},"spec":{"containers":[{"env":[{"name":"IPUOF_LOG_LEVEL","value":"INFO"},{"name":"POPLAR_LOG_LEVEL","value":"INFO"}],"image":"resnet-poplar-2.0:latest","imagePullPolicy":"Always","name":"resnet"}]}}}}}
+  creationTimestamp: "2021-10-27T23:30:38Z"
+  deletionGracePeriodSeconds: 0
+  deletionTimestamp: "2021-10-27T23:33:27Z"
+  finalizers:
+  - ipu.finalizers.graphcore.ai
+  generation: 4
+  managedFields:
+  - apiVersion: graphcore.ai/v1alpha1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:annotations:
+          .: {}
+          f:kubectl.kubernetes.io/last-applied-configuration: {}
+      f:spec:
+        .: {}
+        f:interactive:
+          .: {}
+          f:ttl: {}
+        f:ipusPerModelReplica: {}
+        f:modelReplicas: {}
+        f:workers:
+          .: {}
+          f:replicas: {}
+          f:template:
+            .: {}
+            f:metadata: {}
+            f:spec:
+              .: {}
+              f:containers: {}
+    manager: kubectl-client-side-apply
+    operation: Update
+    time: "2021-10-27T23:30:38Z"
+  - apiVersion: graphcore.ai/v1alpha1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:finalizers: {}
+      f:status:
+        .: {}
+        f:iPUPartitionCreated: {}
+        f:launcherStatus: {}
+        f:restartCount: {}
+    manager: manager
+    operation: Update
+    time: "2021-10-27T23:31:20Z"
+  name: interactive-sample-job-2-workers
+  namespace: default
+  resourceVersion: "549815"
+  uid: f32484a0-218e-4269-95db-d5238fec5ef1
+spec:
+  cleanPodPolicy: None
+  interactive:
+    ttl: 3600
+  restartPolicy:
+    backOffLimit: 3
+    type: Never
+  workers:
+    replicas: 2
+    template:
+      metadata: {}
+      spec:
+        containers:
+        - env:
+          - name: IPUOF_LOG_LEVEL
+            value: INFO
+          - name: POPLAR_LOG_LEVEL
+            value: INFO
+          image: docker.io/mkbahk/resnet-poplar-2.0:latest
+          imagePullPolicy: Always
+          name: resnet
+          resources: {}
