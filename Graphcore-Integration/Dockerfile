@@ -1,0 +1,6 @@
+FROM graphcore/tensorflow:2-amd-2.2.0-bionic-20210723
+RUN apt-get update -y
+RUN apt-get install -y nano git htop curl wget
+RUN pip3 install -U pip
+RUN mkdir /root/tmp
+RUN git clone https://github.com/mkbahk/GraphcoreLearning

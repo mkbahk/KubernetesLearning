@@ -1,3 +1,4 @@
+---
 apiVersion: graphcore.ai/v1alpha1 # the API that defined this API object type
 kind: IPUJob # the kind of this Kubernetes object
 metadata:
@@ -42,4 +43,4 @@ spec:
             value: "INFO" 
           - name: "POPLAR_LOG_LEVEL"
             value: "INFO"     
-
+---

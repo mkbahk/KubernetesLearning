@@ -1,8 +1,9 @@
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
   creationTimestamp: null
-  name: test-job-00
+  name: test-batch-job-00
 spec:
   template:
     metadata:
@@ -12,13 +13,13 @@ spec:
       - command:
         - date
         image: busybox
-        name: test-job-00
+        name: test-batch-job-00
         resources:
           requests:
             memory: 200Mi
       restartPolicy: Never
 status: {}
-
+---
 
 # kubectl describe node | grep -i mem -C 5
 

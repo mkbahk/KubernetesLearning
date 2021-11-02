@@ -2,7 +2,7 @@
 apiVersion: graphcore.ai/v1alpha1 # the API that defined this API object type
 kind: IPUJob # the kind of this Kubernetes object
 metadata:
-  name: ipujob-sample-mnist-01 # the name of the job
+  name: sample-bacth-mnist-01 # the name of the job
 spec:
 #  modelReplicas: "4" # how many replicas should the graph model be split into when being processed
 #  ipusPerModelReplica: "1" # how many IPUs should be assigned to each model replica
@@ -21,13 +21,12 @@ spec:
     template: # native Kubernetes pod template. https://kubernetes.io/docs/concepts/workloads/pods/#pod-templates
       metadata:
         labels:
-          app: mnist-launcher-01
+          app: sample-bacth-mnist-launcher-01
       spec:
         containers: # the containers running inside each worker
-        - name: mnist-01
+        - name: sample-bacth-mnist-container-01
           # TODO: replace this with a publicly accessible image
           image: docker.io/mkbahk/gc-amd-p22-tf24-k8s-integration:1.2
-
           env: # environment variables set on each worker
           - name: "IPUOF_LOG_LEVEL"
             value: "INFO" 

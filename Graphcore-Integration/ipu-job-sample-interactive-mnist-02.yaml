@@ -2,7 +2,7 @@
 apiVersion: graphcore.ai/v1alpha1
 kind: IPUJob
 metadata:
-  name: interactive-sample-job-mnist-02
+  name: sample-interactive-mnist-02
 spec:
   #modelReplicas: "4"
   #ipusPerModelReplica: "1"
@@ -15,16 +15,16 @@ spec:
   interactive:
     ttl: 36000 # how long should the interactive session last, TTL specifies how long this ipujob should live
   workers:
-    replicas: 1
-    template:
+    replicas: 1 #Replicas is the desired number of replicas of the given template.
+    template:  #Template is the object that describes the pod that will be created for this replica. RestartPolicy in PodTemplateSpec will be overide by RestartPolicy in ReplicaSpec
       metadata:
         labels:
-          app: interactive-sample-job-mnist-launcher-02
+          app: sample-interactive-mnist-launcher-02
       spec:
         containers: 
-        - name: mnist-02
+        - name: sample-interactive-mnist-container-02
           # TODO: replace this with a publicly accessible image
-          image:  docker.io/mkbahk/gc-amd-p22-tf24-k8s-integration:1.3
+          image: docker.io/mkbahk/gc-amd-p22-tf24-k8s-integration:1.3
           imagePullPolicy: IfNotPresent
           command: [ "/bin/bash", "-c", "--" ]
           args: [ "while true; do sleep 30; done;" ]
