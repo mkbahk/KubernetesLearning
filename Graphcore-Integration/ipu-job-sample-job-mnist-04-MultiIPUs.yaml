@@ -3,15 +3,14 @@ kind: IPUJob # the kind of this Kubernetes object
 metadata:
   name: ipujob-sample-mnist-04 # the name of the job
 spec:
-#  modelReplicas: "4" # how many replicas should the graph model be split into when being processed
-#  ipusPerModelReplica: "1" # how many IPUs should be assigned to each model replica
+  #modelReplicas: "4" # how many replicas should the graph model be split into when being processed
+  #ipusPerModelReplica: "1" # how many IPUs should be assigned to each model replica
   jobInstances: 1
   ipusPerJobInstance: "4"
   #workersPerJobInstance: ""
   #modelReplicasPerWorker: ""
-  #restartPolicy: OnFailure #Restart policy for the job. One of: Always, OnFailure, Never and ExitCode. Defaults to Never.
+  #restartPolicy: "OnFailure" #Restart policy for the job. One of: Always, OnFailure, Never and ExitCode. Defaults to Never.
   #cleanPodPolicy: "All" #Clean pod policy for the job after it is finished. One of: None, All, Workers Defaults to None.
-
   launcher:
     command: # the command to trigger the job execution
       - python3 

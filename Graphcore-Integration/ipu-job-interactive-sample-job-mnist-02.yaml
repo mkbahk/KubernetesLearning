@@ -11,7 +11,6 @@ spec:
   #modelReplicasPerWorker: ""
   #restartPolicy: OnFailure #Restart policy for the job. One of: Always, OnFailure, Never and ExitCode. Defaults to Never.
   #cleanPodPolicy: "All" #Clean pod policy for the job after it is finished. One of: None, All, Workers Defaults to None.
- 
   interactive:
     ttl: 36000 # how long should the interactive session last, TTL specifies how long this ipujob should live
   workers:
