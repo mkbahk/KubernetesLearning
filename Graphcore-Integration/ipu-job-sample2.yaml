@@ -37,7 +37,7 @@ spec:
         containers: # the containers running inside each worker
         - name: resnet-00
           # TODO: replace this with a publicly accessible image
-          image: mkbahk/resnet-poplar-2.0:latest
+          image: mkbahk/resnet-poplar-2.1:v1.0.1
           env: # environment variables set on each worker
           - name: "IPUOF_LOG_LEVEL"
             value: "INFO" 
