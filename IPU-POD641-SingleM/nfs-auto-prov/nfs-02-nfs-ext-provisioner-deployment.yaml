@@ -31,9 +31,9 @@ spec:
             - name: NFS_SERVER
               value: 218.145.56.66 
             - name: NFS_PATH
-              value: /mnt/nfs_kube
+              value: /mnt/nfs/nfs_kube
       volumes:
         - name: nfs-client-root
           nfs:
             server: 218.145.56.66
-            path: /mnt/nfs_kube
+            path: /mnt/nfs/nfs_kube
