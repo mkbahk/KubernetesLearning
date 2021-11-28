@@ -1,10 +1,10 @@
 kind: Pod
 apiVersion: v1
 metadata:
-  name: test-pod-default
+  name: test-nfs-pvc-pod-default
 spec:
   containers:
-  - name: test-pod-default
+  - name: test-nfs-pvc-pod-default
     image: busybox:stable
     command:
       - "/bin/sh"
