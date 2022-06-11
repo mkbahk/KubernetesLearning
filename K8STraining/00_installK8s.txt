@@ -16,3 +16,50 @@ kubeadm completion bash | sudo tee /etc/bash_completion.d/kubeadm > /dev/null
 
 ssh disconnect & reconnect
 
+=======================================================
+K8s Commands 기본 수행 구조
+-------------------------------------------------------
+kubectl --help
+kubectl command --help
+kubectl run <자원이름> <옵션>
+#kubectl create -f file_name.yaml
+kubectl create -f file_name.yaml
+
+kubectl get <자원이름> <객체이름>
+kebectl edit <자원이름> <객체이름>
+kubectl describe <자원이름> <객체이름>
+
+kubectl delete <자원이름> <객체이름>
+
+kubectl api-resources
+
+=======================================================
+K8s Commands 수행 예제
+-------------------------------------------------------
+kubectl --help
+kubectl logs --help
+
+kubectl get nodes
+kubectl get nodes -o wide
+kubectl get nodes -o json
+kubectl get nodes -o yaml
+
+root@pod641:~# kubectl get nodes
+NAME     STATUS   ROLES                  AGE   VERSION
+pod641   Ready    control-plane,master   61d   v1.20.0
+pod642   Ready    <none>                 61d   v1.20.0
+root@pod641:~# kubectl describe node pod641
+
+//시작하자
+kubectl run nginxweb --image=nginx:1.14 --port 80
+
+root@pod641:~# kubectl get pods -o wide
+NAME                                               READY   STATUS      RESTARTS   AGE     IP              NODE     NOMINATED NODE   READINESS GATES
+nginxweb                                           1/1     Running     0          3m29s   172.28.17.94    pod641   <none>           <none>
+
+kubectl logs  nginxweb
+kubectl describe pod nginxweb
+
+ping 172.28.17.94
+curl http://172.28.17.94:80/
+curl 
