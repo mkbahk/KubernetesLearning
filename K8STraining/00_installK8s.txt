@@ -1,0 +1,18 @@
+
+=======================================================
+bash-completion
+-------------------------------------------------------
+apt-get install bash-completion -y
+
+//현재 사용자에게만 적용
+echo 'source <(kubectl completion bash)' >>~/.bashrc
+echo 'source <(kubeadm completion bash)' >>~/.bashrc
+
+ssh disconnect & reconnect
+
+//시스템 전체에 적용
+kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
+kubeadm completion bash | sudo tee /etc/bash_completion.d/kubeadm > /dev/null
+
+ssh disconnect & reconnect
+
