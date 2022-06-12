@@ -202,4 +202,3 @@ release "nginxingweb" uninstalled
 
 //이제 부터는 k8s상에서 응용프로그램 배포는 .YAML로 합니다.
 //확인은 Kubernetes dashboard
-
