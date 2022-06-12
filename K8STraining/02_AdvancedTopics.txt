@@ -1,0 +1,12 @@
+namespace:
+1) quota, LimitRange는 Advanced Topic에서
+
+pod: 
+1) livenessProbe를 사용한 self-healing Pod
+2) init container
+3) infra container(pause) 
+4) static pod 만들기
+5) Pod에 resource 할당하기
+6) 환경변수를 이용해 컨터이너에게 데이터 전달하기
+7) pod구성 패턴의 종류
+
