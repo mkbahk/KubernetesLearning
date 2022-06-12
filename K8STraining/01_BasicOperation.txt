@@ -14,7 +14,23 @@ ssh disconnect & reconnect
 kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
 kubeadm completion bash | sudo tee /etc/bash_completion.d/kubeadm > /dev/null
 
-ssh disconnect & reconnect
+//ssh disconnect & reconnect
+
+
+kubeadm version
+kubelet --version
+kubectl version
+
+kubectl cluster-info
+
+root@pod641:~# kubectl cluster-info
+Kubernetes control plane is running at https://218.145.56.75:6443
+KubeDNS is running at https://218.145.56.75:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+Metrics-server is running at https://218.145.56.75:6443/api/v1/namespaces/kube-system/services/https:metrics-server:/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+root@pod641:~#
+
 
 =======================================================
 K8s Commands 기본 수행 구조
@@ -202,3 +218,114 @@ release "nginxingweb" uninstalled
 
 //이제 부터는 k8s상에서 응용프로그램 배포는 .YAML로 합니다.
 //확인은 Kubernetes dashboard
+
+=======================================================
+K8s NAMESPACE: 가상자원의 집합 및 구별 ->자원할당 통제
+-------------------------------------------------------
+-가상자원: CPU, MEMORY, NETWORK(1G, 10G, 100G, ETHERNET, INFINBAND,...), STORAGE(1G, 10G, 100G), GPU/IPU/FPGA,...
+
+kubectl create namespace devteam
+kubectl get namespaces
+
+kubectl create namespace devteam --dry-run=client -o yaml 
+root@pod641:~# kubectl create namespace devteam --dry-run=client -o yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: devteam
+spec: {}
+status: {}
+root@pod641:~#
+
+kubectl create namespace devteam --dry-run=client -o yaml > namespace-devteam.yaml
+
+kubectl apply -f namespace-devteam.yaml
+kubectl delete -f namespace-devteam.yaml
+
+kubectl apply -f namespace-devteam.yaml
+
+kubectl run nginxweb --image=nginx:latest --port 80 --namespace devteam
+
+root@pod641:~# kubectl run nginxweb --image=nginx:latest --port 80 --namespace devteam --dry-run=client -o yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: nginxweb
+  name: nginxweb
+  namespace: devteam
+spec:
+  containers:
+  - image: nginx:latest
+    name: nginxweb
+    ports:
+    - containerPort: 80
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+root@pod641:~#
+
+
+
+
+kubectl get pods
+kubectl get pods --all-namespaces
+kubectl get pods -n devteam
+
+kubectl delete pod nginxingweb -n devteam
+
+kubectl delete namespace devteam
+
+kubectl describe namespaces devteam
+
+
+//Namespace를 만들 후에 pod까지 만들겠다고 두 YAML파일을 Merge하는 법
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: devteam
+spec: {}
+status: {}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: nginxweb
+  name: nginxweb
+  namespace: devteam
+spec:
+  containers:
+  - image: nginx:latest
+    name: nginxweb
+    ports:
+    - containerPort: 80
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+---
+
+kubectl apply -f create_ns_andthen_pod.yaml
+kubectl delete -f create_ns_andthen_pod.yaml
+
+
+root@pod641:~# kubectl describe namespaces devteam
+Name:         devteam
+Labels:       <none>
+Annotations:  <none>
+Status:       Active
+
+No resource quota.
+
+No LimitRange resource.
+//이번 실습에서는 quota, LimitRange는 SKIP합니다.
+
+
+
