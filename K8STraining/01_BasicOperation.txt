@@ -34,7 +34,7 @@ kubectl delete <자원이름> <객체이름>
 kubectl api-resources
 
 =======================================================
-K8s Commands 수행 예제
+K8s 기본 Commands 수행 및 기초작업 절차
 -------------------------------------------------------
 kubectl --help
 kubectl logs --help
@@ -168,3 +168,38 @@ NAME                                               READY   STATUS      RESTARTS 
 nginxweb                                           1/1     Running     0          11s
 
 kubectl delete -f nginxweb-k8s-run-mkbahk-20220617.yaml
+
+//git에 .YAML을 올려 놓고 직접 다운한 후 기동가능
+kubectl apply -f https://raw.githubusercontent.com/mkbahk/KubernetesLearning/main/K8STraining/nginxweb-k8s-run-mkbahk-20220617.yaml
+
+kubectl delete -f https://raw.githubusercontent.com/mkbahk/KubernetesLearning/main/K8STraining/nginxweb-k8s-run-mkbahk-20220617.yaml
+
+
+// https://artifacthub.io/ 에서 nginx찻아서 수행하는 방법
+// nginx-ingress 찾으세요.
+
+helm repo add nginx-stable https://helm.nginx.com/stable
+helm repo update
+
+helm install nginxingweb nginx-stable/nginx-ingress
+
+helm list
+
+root@pod641:~# helm list
+NAME            NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                   APP VERSION
+nginxingweb     default         1               2022-06-12 11:19:42.205431442 +0900 KST deployed        nginx-ingress-0.13.2    2.2.2
+
+kubectl get pods
+
+root@pod641:~# kubectl get pods
+NAME                                               READY   STATUS      RESTARTS   AGE
+nginxingweb-nginx-ingress-69f99d89c8-556ts         1/1     Running     0          24s
+
+helm uninstall nginxingweb
+
+root@pod641:~# helm uninstall nginxingweb
+release "nginxingweb" uninstalled
+
+//이제 부터는 k8s상에서 응용프로그램 배포는 .YAML로 합니다.
+//확인은 Kubernetes dashboard
+
