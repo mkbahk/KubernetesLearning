@@ -68,13 +68,103 @@ curl http://공인ip:80/  //않되는 것이 정상
 kubectl create deployment multiweb --image=httpd:latest --replicas=3
 kubectl get deployments.apps -o wide
 
+kubectl get deployments.apps
 root@pod641:~# kubectl get deployments.apps
 NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
 multiweb                          3/3     3            3           2m30s
 
+kubectl get pod -o wide
 root@pod641:~# kubectl get pod -o wide
 NAME                                               READY   STATUS      RESTARTS   AGE     IP               NODE     NOMINATED NODE   READINESS GATES
 multiweb-dc7ddc4f8-27w89                           1/1     Running     0          2m53s   172.28.17.95     pod641   <none>           <none>
 multiweb-dc7ddc4f8-p7j7c                           1/1     Running     0          2m53s   172.28.235.249   pod642   <none>           <none>
 multiweb-dc7ddc4f8-wtsp8                           1/1     Running     0          2m53s   172.28.235.250   pod642   <none>           <none>
 
+kubectl get deployments.apps multiweb -o yaml
+
+//Container 내부 명령어 수행하기
+kubectl get pods
+
+root@pod641:~# kubectl get pods
+NAME                                               READY   STATUS      RESTARTS   AGE
+nginxweb                                           1/1     Running     0          11h
+
+kubectl exec nginxweb -it -- /bin/bash
+
+kubectl logs nginxweb
+
+kubectl describe pod nginxweb   //docker inspect를 대신하는 명령
+kubectl port-forward nginxweb 8380:80  //개발환경에서 테스팅용도만, 실제는 Load Balancer사용
+
+root@pod641:~# kubectl port-forward nginxweb 8380:80
+Forwarding from 127.0.0.1:8380 -> 80
+Forwarding from [::1]:8380 -> 80
+
+Handling connection for 8380
+Ctrl+c 
+
+
+root@pod641:~# kubectl get pods
+NAME                                               READY   STATUS      RESTARTS   AGE
+multiweb-dc7ddc4f8-27w89                           1/1     Running     0          11h
+multiweb-dc7ddc4f8-p7j7c                           1/1     Running     0          11h
+multiweb-dc7ddc4f8-wtsp8                           1/1     Running     0          11h
+
+
+kubectl edit deployments.apps multiweb
+...
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 3 -> 6  //vi editor임. "i" 3 -> 6로 변경
+...
+Esc
+Esc
+
+:wq!
+
+root@pod641:~# kubectl get deployments.apps
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
+multiweb                          6/6     6            6           11h
+
+
+//수행명령을 .YAML 파일로 만들기
+kubectl run nginxweb --image=nginx:latest --port 80 --dry-run
+kubectl run nginxweb --image=nginx:latest --port 80 --dry-run -o yaml
+kubectl run nginxweb --image=nginx:latest --port 80 --dry-run -o yaml > nginxweb-k8s-run-mkbahk-20220617.yaml
+
+cat nginxweb-k8s-run-mkbahk-20220617.yaml
+
+root@pod641:~# cat nginxweb-k8s-run-mkbahk-20220617.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: nginxweb
+  name: nginxweb
+spec:
+  containers:
+  - image: nginx:latest
+    name: nginxweb
+    ports:
+    - containerPort: 80
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+
+kubectl apply -f nginxweb-k8s-run-mkbahk-20220617.yaml
+
+// 이제부터는 왠만한 모든 실행은 .YAML로 합니다. 
+// github나 dockerhub처럼 이 .YAML들만 전문적으로 저장하고 있는 장소가 
+// helm repogitory: https://artifacthub.io/ 입니다.
+
+kubectl apply -f nginxweb-k8s-run-mkbahk-20220617.yaml
+
+root@pod641:~# kubectl apply -f nginxweb-k8s-run-mkbahk-20220617.yaml
+pod/nginxweb created
+root@pod641:~# kubectl get pods
+NAME                                               READY   STATUS      RESTARTS   AGE
+nginxweb                                           1/1     Running     0          11s
+
+kubectl delete -f nginxweb-k8s-run-mkbahk-20220617.yaml
