@@ -343,4 +343,23 @@ K8s YAML Template
   .배열문법: '-'문자로 여러 개를 나열
   .공식 사이느: http://yaml.org/
 
-  
+=======================================================
+K8s API Version
+-------------------------------------------------------
+-alpha -> beta -> stable
+-Kubernetes Oject 정의 시 apiVersion이 필요
+-Kubernetes가 update하는 API가 있으면 새로운 API가 생성 됨
+-API Object 종류 및 버젼
+  .Deployment             apps/v2
+  .Pod                    v1
+  .ReplicaSet             apps/v1
+  .ReplicationController  v1
+  .services               v1
+  .PersistentVolume       v1
+
+//Resource들의 API Version을 확인하는 명령
+kubectl explain pod
+
+=======================================================
+K8s Pod with Single and Multi Container
+-------------------------------------------------------
