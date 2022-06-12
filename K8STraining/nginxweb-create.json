@@ -1,0 +1,28 @@
+{
+    "kind": "Pod",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "nginxweb",
+        "creationTimestamp": null,
+        "labels": {
+            "run": "nginxweb"
+        }
+    },
+    "spec": {
+        "containers": [
+            {
+                "name": "nginxweb",
+                "image": "nginx:latest",
+                "ports": [
+                    {
+                        "containerPort": 80
+                    }
+                ],
+                "resources": {}
+            }
+        ],
+        "restartPolicy": "Always",
+        "dnsPolicy": "ClusterFirst"
+    },
+    "status": {}
+}
