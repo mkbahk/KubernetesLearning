@@ -1,8 +1,28 @@
-namespace:
-1) quota, LimitRange는 Advanced Topic에서
+=======================================================
+Namespace:  Quota, LimitRange
+-------------------------------------------------------
 
-pod: 
-1) livenessProbe를 사용한 self-healing Pod
+namespace:
+1) quota, LimitRange는 
+
+
+=======================================================
+POD:  init container
+-------------------------------------------------------
+-개념:
+  앱컨터이너 실행 전ㅔ 미리 동작시킬 컨테이너
+  본 컨테이너가 실행되기 전ㅔ 사ㄴ 작업이 필요한 경우 사용
+  초기화 컨테이너가 모두 실행된 후에 앱 컨테이너를 실행
+  https://github.com/arisu1000/kubernetes-book-sample/blob/master/pod/pod-init.yaml
+
+  
+
+
+
+
+
+
+
 2) init container
 3) infra container(pause) 
 4) static pod 만들기
