@@ -374,10 +374,10 @@ K8s Pod with Single and Multi Container
 apiVersion: v1
 kind: Pod
 metadata:
-  name: nginx-nodejs-web-pod
+  name: multi-nginx-nodejs-pod
 spec:
   containers:
-  - name: nginxweb80container
+  - name: nginx80container
     image: nginx:latest
     ports:
     - containerPort: 80
@@ -389,9 +389,8 @@ spec:
       protocol: TCP
 ---
 
-kubectl exec -it  nginx-nodejs-web-pod -c hellonodejs7777container -- /bin/bash
-
-
+kubectl exec -it  multi-nginx-nodejs-pod -c hellonodejs7777container -- /bin/bash
+kubectl logs multl-nginx-nodsjs-pod -c nginx80container
 
 
 
