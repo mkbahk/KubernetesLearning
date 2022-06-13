@@ -76,6 +76,15 @@ myapp-pod                                          0/1     Init:1/2    0        
 myapp-pod                                          0/1     PodInitializing   0          76s   172.28.17.115   pod641   <none>           <none>
 myapp-pod                                          1/1     Running           0          77s   172.28.17.115   pod641   <none>           <none>
 
+kubectl delete  -f init-container-mydb.yaml
+kubectl delete -f init-container-myservice.yaml
+kubectl delete -f init-container-myapp-pod.yaml
+
+
+
+=======================================================
+POD:  infra container
+-------------------------------------------------------
 
 
 
