@@ -1,0 +1,4 @@
+kubectl get pods -o wide --watch
+kubectl delete pods --all
+
+

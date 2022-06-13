@@ -370,6 +370,7 @@ K8s Pod with Single and Multi Container
   .하나의 POD는 IP_Address가, POD안의 컨테이너들은 TCP/UDP PORT로 구별됨
   .컨테이너를 표현하는 K8s API의 최소단위
 
+// multl-nginx-nodsjs-pod.yaml
 ---
 apiVersion: v1
 kind: Pod
@@ -392,5 +393,47 @@ spec:
 kubectl exec -it  multi-nginx-nodejs-pod -c hellonodejs7777container -- /bin/bash
 kubectl logs multl-nginx-nodsjs-pod -c nginx80container
 
+
+
+// multi-nginx-ubuntu-pod.yaml
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-nginx-ubuntu-pod
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx:latest
+    ports:
+    - containerPort: 80
+  - name: ubuntu-container
+    image: ubuntu:18.04
+    command:
+    - sleep
+    - "10000"
+---
+
+kubectl apply -f multi-nginx-ubuntu-pod.yaml
+kubectl get pods
+kubectl describe pod multi-nginx-ubuntu-pod
+
+kubectl exec -it multi-nginx-ubuntu-pod -c nginx-container -- /bin/bash
+  apt update 
+  apt install curl wget git nano htop net-tools -y
+  ifconfig
+  netstat -nltp
+  curl http://localhost:80/
+  exit
+
+kubectl exec -it multi-nginx-ubuntu-pod -c ubuntu-container -- /bin/bash
+  apt update 
+  apt install curl wget git nano htop net-tools -y
+  ifconfig
+  netstat -nltp
+  curl http://localhost:80/
+  exit
+
+kubectl delete -f multi-nginx-ubuntu-pod.yaml
 
 
