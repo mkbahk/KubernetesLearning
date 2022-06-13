@@ -1,5 +1,47 @@
 
 =======================================================
+Basic Concept
+-------------------------------------------------------
+-개념:
+  .K8s 핵심서비스를 담당하는 etcd, kube-api-server, kube-scheduler, kube-contraller-manager 조차 POD, Docker형태로 기동됨 
+  .daemon는 오직 kubelet 만 
+
+-kubelet daemon
+root@pod641:/var/lib/kubelet# ll
+total 44
+drwx------  8 root root 4096 Apr 11 07:54 ./
+drwxr-xr-x 65 root root 4096 Apr 26 11:59 ../
+-rw-r--r--  1 root root  921 Apr 11 07:54 config.yaml
+-rw-------  1 root root   62 Apr 11 07:54 cpu_manager_state
+drwxr-xr-x  2 root root 4096 Apr 11 07:54 device-plugins/
+-rw-r--r--  1 root root   93 Apr 11 07:54 kubeadm-flags.env
+drwxr-xr-x  2 root root 4096 Apr 11 07:54 pki/
+drwxr-x---  2 root root 4096 Apr 11 07:54 plugins/
+drwxr-x---  2 root root 4096 Apr 11 07:54 plugins_registry/
+drwxr-x---  2 root root 4096 Apr 11 07:54 pod-resources/
+drwxr-x--- 22 root root 4096 Jun 14 08:08 pods/
+root@pod641:/var/lib/kubelet#
+
+
+cat /var/lib/kubelet/config.yaml
+...
+staticPodPath: /etc/kubernetes/manifests
+...
+
+
+-/etc/kubernetes/manifests
+
+root@pod641:/etc/kubernetes/manifests# ll
+total 24
+drwx------ 2 root root 4096 Apr 11 07:54 ./
+drwxr-xr-x 4 root root 4096 Apr 11 07:54 ../
+-rw------- 1 root root 2183 Apr 11 07:54 etcd.yaml
+-rw------- 1 root root 3818 Apr 11 07:54 kube-apiserver.yaml
+-rw------- 1 root root 3315 Apr 11 07:54 kube-controller-manager.yaml
+-rw------- 1 root root 1385 Apr 11 07:54 kube-scheduler.yaml
+root@pod641:/etc/kubernetes/manifests#
+
+=======================================================
 bash-completion
 -------------------------------------------------------
 apt-get install bash-completion -y
