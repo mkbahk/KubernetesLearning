@@ -437,3 +437,97 @@ kubectl exec -it multi-nginx-ubuntu-pod -c ubuntu-container -- /bin/bash
 kubectl delete -f multi-nginx-ubuntu-pod.yaml
 
 
+//Image Update를 통한 POD S/W update
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-sw-upgrade-pod
+spec:
+  containers:
+  - image: nginx:1.21
+    name: nginx-sw-upgrade-container
+    ports:
+    - containerPort: 80
+---
+
+kubectl apply -f nginx_sw_upgrade_pod.yaml
+
+nano nginx_sw_upgrade_pod.yaml
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-sw-upgrade-pod
+spec:
+  containers:
+  - image: nginx:1.22
+    name: nginx-sw-upgrade-container
+    ports:
+    - containerPort: 80
+---
+
+//기존 POD 종료하지 않고 바로 적용
+kubectl apply -f nginx_sw_upgrade_pod.yaml
+docker image ls | grep nginx
+
+=======================================================
+K8s Pod Self-healing
+-------------------------------------------------------
+-개념: 
+  .단순하게 pod/container가 정상적으로 실행되었다가 최상의 상태는 아님. 그 속에 수행중인 App.를 정상적으로 수행하는 것은 POD상태에 반영하는 것.
+  .개발자들이 관리자들의 도움을 받지 않고 스스로 자신의 App.의 건강성을 체크하여 대응토록 해 줌
+
+-제공 기능: 
+  //상태번호 200번이 아닌 것이 나오면 컨테이너 다시 시작, 연속3회 실폐시
+  livenessProbe: 
+    httpGet:
+      path: /
+      port: 80
+  ---
+  //지정된 포트에 TCP 연결시도해 반응하지 않으면 컨테이너 다시 시작, 연속3회 실폐시
+  livenessProbe: 
+    tcpSocket:
+      port: 22
+  ---
+  //종료코드가 0이 아니면 컨테이너 다시 시작, 연속3회 실폐시
+  livenessProbe: 
+      exec:
+      command:
+      - ls
+      - /data/files  
+
+
+nano nginx-self-healing.yaml
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-self-healing
+spec:
+  containers:
+  - image: nginx:1.22
+    name: nginx-self-healing-container
+    livenessProbe:
+       httpGet:
+          path: /index.html
+          port: 80
+    ports:
+    - containerPort: 80
+---
+
+kubectl apply -f nginx-self-healing.yaml
+
+kubectl logs nginx-self-healing
+kubectl describe nginx-self-healing
+
+2022/06/13 12:28:14 [notice] 1#1: start worker process 283
+2022/06/13 12:28:14 [notice] 1#1: start worker process 284
+2022/06/13 12:28:14 [notice] 1#1: start worker process 285
+10.1.6.1 - - [13/Jun/2022:12:28:22 +0000] "GET /index.html HTTP/1.1" 200 615 "-" "kube-probe/1.20" "-"
+10.1.6.1 - - [13/Jun/2022:12:28:32 +0000] "GET /index.html HTTP/1.1" 200 615 "-" "kube-probe/1.20" "-"
+10.1.6.1 - - [13/Jun/2022:12:28:42 +0000] "GET /index.html HTTP/1.1" 200 615 "-" "kube-probe/1.20" "-"
+
+=======================================================
+K8s Pod Self-healing
+-------------------------------------------------------
