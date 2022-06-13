@@ -13,17 +13,72 @@ POD:  init container
   앱컨터이너 실행 전ㅔ 미리 동작시킬 컨테이너
   본 컨테이너가 실행되기 전ㅔ 사ㄴ 작업이 필요한 경우 사용
   초기화 컨테이너가 모두 실행된 후에 앱 컨테이너를 실행
-  https://github.com/arisu1000/kubernetes-book-sample/blob/master/pod/pod-init.yaml
-
-  
+  https://kubernetes.io/ko/docs/concepts/workloads/pods/init-containers/
 
 
+nano init-container-myapp-pod.yaml
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+spec:
+  containers:
+  - name: myapp-container
+    image: busybox:1.28
+    command: ['sh', '-c', 'echo The app is running! && sleep 3600']
+  initContainers:
+  - name: init-myservice
+    image: busybox:1.28
+    command: ['sh', '-c', "until nslookup myservice.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for myservice; sleep 2; done"]
+  - name: init-mydb
+    image: busybox:1.28
+    command: ['sh', '-c', "until nslookup mydb.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for mydb; sleep 2; done"]
+---
+
+nano init-container-myservice.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: myservice
+spec:
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 9376
+---
+
+nano init-container-mydb.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mydb
+spec:
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 9377
+---
+
+root@pod641:~# kubectl get pods  -o wide --watch
+NAME                                               READY   STATUS      RESTARTS   AGE   IP              NODE     NOMINATED NODE   READINESS GATES
+myapp-pod                                          0/1     Pending     0          0s    <none>          <none>   <none>           <none>
+myapp-pod                                          0/1     Pending     0          0s    <none>          pod641   <none>           <none>
+myapp-pod                                          0/1     Init:0/2    0          0s    <none>          pod641   <none>           <none>
+myapp-pod                                          0/1     Init:0/2    0          1s    <none>          pod641   <none>           <none>
+myapp-pod                                          0/1     Init:0/2    0          6s    172.28.17.115   pod641   <none>           <none>
+myapp-pod                                          0/1     Init:1/2    0          44s   172.28.17.115   pod641   <none>           <none>
+myapp-pod                                          0/1     Init:1/2    0          45s   172.28.17.115   pod641   <none>           <none>
+myapp-pod                                          0/1     PodInitializing   0          76s   172.28.17.115   pod641   <none>           <none>
+myapp-pod                                          1/1     Running           0          77s   172.28.17.115   pod641   <none>           <none>
 
 
 
 
-
-2) init container
 3) infra container(pause) 
 4) static pod 만들기
 5) Pod에 resource 할당하기
