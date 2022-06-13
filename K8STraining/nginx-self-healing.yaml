@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-self-healing
+spec:
+  containers:
+  - image: nginx:1.22
+    name: nginx-self-healing-container
+    livenessProbe:
+       httpGet:
+          path: /index.html
+          port: 80
+    ports:
+    - containerPort: 80
+---
