@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: env-nginx-pod
+  name: env-nginx-pod
+spec:
+  containers:
+  - image: nginx:latest
+    name: env-nginx-container
+    ports:
+    - containerPort: 80
+    env:
+    - name: MYENV
+      value: "HelloENV"
+---
