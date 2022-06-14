@@ -83,7 +83,7 @@ kubectl delete -f init-container-myapp-pod.yaml
 
 
 =======================================================
-POD:  infra container
+POD: infra container
 -------------------------------------------------------
 -개념:
   .POD가 만들어 질때 내부적으로 숨겨진 pause container가 하나씩 만들어 진다.
@@ -101,7 +101,7 @@ root@pod641:~/KubernetesLearning#
 
 
 =======================================================
-POD:   static pod
+POD: static pod
 -------------------------------------------------------
 -개념: 
   .POD의 생성은 API-Server로 들어온 요청을 Scheduler가 etcd DB를 읽어서 만들어질 node를 결정해 주면 Controler-Manager가 그 노드의 kubelet daemon과 통신해서 만들어 주는 절차를 거치는데
@@ -157,11 +157,64 @@ drwxr-xr-x 4 root root 4096 Apr 11 07:54 ../
 root@pod641:/etc/kubernetes/manifests#
 
 
+=======================================================
+POD: Resource 할당방법
+-------------------------------------------------------
+-개념: 
+  .K8s는 크게 Namespace(quota, LimitRange)단위와 개별 리소스(pod, service, ...)단위의 호스트의 자원을 제한 하는 방법을 제공
+  .Namespace(quota, LimitRange)는 관리자가 통제함
+  .Namespace내에 생기는 개별POD들은 개발자가 통제할 수 있음
+  .Request와 Limits 등 2가지 방식 제공
+  .Resource Requests: POD를 수행하기 위한 최소 리소스 양을 요청, 만약 현재 자원이 존재하지 않으면 Schedule는 자원의 여유가 생길 때까지 pending상태를 유지시킴
+  .Resource Limits: 파트가 사용할 수 있는 최대 리소스 양을 제한, Limit을 초과해서 사용되는 파트는 강제종료(OOM Kill-Restart)되며 다시 스케쥴링 되기위해 Pending상태로 변함
+
+-K8s Resource 단위:
+  .CPU는 Core숫자 또는 m, milli core로 표현
+  .1MB != 1024KB (X)
+  .1MB == 1000KB
+  .1MiB == 1024KiB
 
 
 
+=======================================================
+POD: 환경변수 할당법
+-------------------------------------------------------
+-개념:
+  .환경변수를 이용해 컨터이너에게 데이터 전달하기
+  .POD내의 컨테이너가 실행될 때 필요로 하는 변수
+  .컨테이너 만들때 개발자, 엔지니어가 미리 정의
+  .새로운 변수 및 POD실행시 미리 정의된 컨테이너의 환경변수를 변경할 수도 있음.
 
-5) Pod에 resource 할당하기
-6) 환경변수를 이용해 컨터이너에게 데이터 전달하기
+
+nano env-nginx-pod.yaml
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: env-nginx-pod
+  name: env-nginx-pod
+spec:
+  containers:
+  - image: nginx:latest
+    name: env-nginx-container
+    ports:
+    - containerPort: 80
+    env:
+    - name: MYENV
+      value: "HelloENV"
+---
+
+kubectl apply -f env-nginx-pod.yaml
+kubectl exec -it env-nginx-pod -- env
+kubectl exec -it env-nginx-pod -- env | grep MYENV
+
+
+
+=======================================================
+POD: 구성패턴의 종류
+-------------------------------------------------------
+
 7) pod구성 패턴의 종류
 
