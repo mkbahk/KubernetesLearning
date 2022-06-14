@@ -47,8 +47,8 @@ bash-completion
 apt-get install bash-completion -y
 
 //현재 사용자에게만 적용
-echo 'source <(kubectl completion bash)' >>~/.bashrc
-echo 'source <(kubeadm completion bash)' >>~/.bashrc
+echo 'source <(kubectl completion bash)' >> ~/.bashrc
+echo 'source <(kubeadm completion bash)' >> ~/.bashrc
 
 ssh disconnect & reconnect
 
