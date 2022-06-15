@@ -594,7 +594,7 @@ K8s Controller: ReplicationController
   .소프트웨어 배포 전략 중 Rolling Update전략 구현이 가능함
   .이 기능은 이 기능보다 추가적인 기능을 지닌 ReplicaSet으로 대치하는 중, Old기능으로 사용자재
 -기본구성: 
-  .selector: 숫자를 유지하기 위해 POD의 Label 모니터링하는 지시자
+  .selector: 숫자를 유지하기 위해 POD의 Label 모니터링하는 지시자, RC는 이것만을 모니터링 함.
   .replicas: 유지할 POD의 갯수
   .template: 수행시킬 container template
 
