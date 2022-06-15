@@ -571,5 +571,30 @@ kubectl describe nginx-self-healing
 10.1.6.1 - - [13/Jun/2022:12:28:42 +0000] "GET /index.html HTTP/1.1" 200 615 "-" "kube-probe/1.20" "-"
 
 =======================================================
-K8s Pod Self-healing
+K8s Controller
 -------------------------------------------------------
+-개념:
+  .K8s 핵심구성요소: etcd, controller, scheduler, api-server, CoreDNS, Kubelet-Daemon 중 Controller기능 및 역할
+  .Cotroller: 어떤 Resource(ex. Pod, ...)를 지정된 갯수 만큼 유지(모니터링, 보장)하는 기능
+  .Controller의 종류:
+    1) ReplicationController -> POD
+    2) DemonSet -> POD
+    3) Deployment -> ReplicaSet -> POD
+    4) Statefull Set -> POD
+    5) Cronjob->Job -> POD
+
+=======================================================
+K8s Controller: ReplicationController
+-------------------------------------------------------
+-개념: 요구하는 Pod의 갯수를 보장하며, 파드 집합의 실행을 항상 안정적으로 유지하는 것을 목표
+  .요구하는 Pod의 갯수가 부족하면 template에 정의된 POD를 추가적으로 만들어 줌
+  .요구하는 Pod의 수 보다 많으면 최근에 생성된 Pod를 삭제
+  .Replicas: 지시자에 지정된 숫자를 변경함으로써 복제 갯수의 수평적 증감 수행(Load Balancing + Fault Torlerance)
+  .다른 Task에 의해 동일한 이름을 가진 Label/selector에 의해 중복되는 Pod의 생성도 억제
+  .소프트웨어 배포 전략 중 Rolling Update전략 구현이 가능함
+  .이 기능은 이 기능보다 추가적인 기능을 지닌 ReplicaSet으로 대치하는 중, Old기능으로 사용자재
+-기본구성: 
+  .selector: 숫자를 유지하기 위해 POD의 Label 모니터링하는 지시자
+  .replicas: 유지할 POD의 갯수
+  .template: 수행시킬 container template
+
