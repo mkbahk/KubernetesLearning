@@ -1,0 +1,37 @@
+---
+apiVersion: apps/v1
+#kind: ReplicaSet
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    kubernetes.io/change-cause: verstion 1.21
+spec:
+# default 옵션으로 변경 가능
+  progressDeadlineSeconds: 600
+  revisionHistoryLimit: 10
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+#
+  replicas: 3
+  selector:
+    matchLabels:
+      app: "nginxweb"
+    matchExpressions:
+    - {key: version, operator: In, values: ["1.20", "1.21", "1.22", "latest"]}
+  template:
+    metadata:
+      name: nginxweb-pod
+      labels:
+        app: "nginxweb"
+        version: "1.21"
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+---

@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nginx-statfulset
+spec:
+  replicas: 3
+  serviceName: nginx-statefulset-svc
+  #podManagementPolicy: OrderReady //순차적으로 생김, 1번 생긴 후에 2번 생김
+  #podManagementPolicy: Parellel //번호는 다르지만 동시에 생김
+  selector:
+    matchLabels:
+      app: "nginxweb"
+    matchExpressions:
+    - {key: version, operator: In, values: ["1.20", "1.21", "1.22", "latest"]}
+  template:
+    metadata:
+      name: nginxweb-pod
+      labels:
+        app: "nginxweb"
+        version: "1.21"
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+---

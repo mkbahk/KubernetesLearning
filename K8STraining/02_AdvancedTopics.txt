@@ -212,9 +212,104 @@ kubectl exec -it env-nginx-pod -- env | grep MYENV
 
 
 
+
+
+
+
+
 =======================================================
-POD: 구성패턴의 종류
+K8s Controller: Deployment Rolling Update를 Annotations을 이용하는 방법
 -------------------------------------------------------
 
-7) pod구성 패턴의 종류
+nano nginx-Deployment-2-annotations.yaml 
 
+---
+apiVersion: apps/v1
+#kind: ReplicaSet
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    kubernetes.io/change-cause: verstion 1.21
+spec:
+# 원래 default 값이, update가능
+  progressDeadlineSeconds: 600
+  revisionHistoryLimit: 10
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+#
+  replicas: 3
+  selector:
+    matchLabels:
+      app: "nginxweb"
+    matchExpressions:
+    - {key: version, operator: In, values: ["1.20", "1.21", "1.22", "latest"]}
+  template:
+    metadata:
+      name: nginxweb-pod
+      labels:
+        app: "nginxweb"
+        version: "1.21"
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+---
+
+kubectl apply  -f nginxweb-Deployment-2-annotations.yaml  
+//여기에 --record 옵션을 주지 않음
+
+kubectl get deployment,rs,pod
+
+
+//이미지 update
+nano nginx-Deployment-2-annotations.yaml 
+...
+  annotations:
+    kubernetes.io/change-cause: verstion 1.21 --> 1.22
+...
+     name: nginxweb-pod
+      labels:
+        app: "nginxweb"
+        version: "1.21" --> 1.22
+    spec:
+...
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.21 --> 1.22
+...
+
+kubectl apply  -f nginxweb-Deployment-2-annotations.yaml 
+//여기에 --record 옵션을 주지 않음
+
+kubectl rollout history deployment nginx-deployment
+root@pod641:~/KubernetesLearning/K8STraining# kubectl rollout history deployment nginx-deployment
+deployment.apps/nginx-deployment
+REVISION  CHANGE-CAUSE
+1         verstion 1.21
+2         verstion 1.22
+
+kubectl delete -f nginxweb-Deployment-2-annotations.yaml 
+
+
+=======================================================
+새로운 노드를 기본 클러스터에 연결시키기 위해서 만료된 토큰 새로 생성하기
+-------------------------------------------------------
+
+kubeadm token list
+kubeadm token create --ttl 2400h
+
+root@pod641:~/KubernetesLearning/K8STraining# kubeadm token create --ttl 2400h
+lpqxog.i7ngaww75f0oahan
+
+
+//홋트를 클러스트에서 탈퇴시키기 
+kubeadm reset 
+
+kubeadm

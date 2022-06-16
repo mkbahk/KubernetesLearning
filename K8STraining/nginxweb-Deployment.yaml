@@ -1,0 +1,26 @@
+---
+apiVersion: apps/v1
+#kind: ReplicaSet
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: "nginxweb"
+    matchExpressions:
+    - {key: version, operator: In, values: ["1.20", "1.21", "1.22", "latest"]}
+  template:
+    metadata:
+      name: nginxweb-pod
+      labels:
+        app: "nginxweb"
+        version: "1.21"
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+---

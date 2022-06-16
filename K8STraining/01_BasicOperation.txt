@@ -834,7 +834,7 @@ nginx-replicaset-k5l6k                             1/1     Running     0        
 nginx-replicaset-lqppw                             1/1     Running     0          87s   app=nginxweb,version=1.21
 nginx-replicaset-v7bbs                             1/1     Running     0          87s   app=nginxweb,version=1.21
 
-//위 label을 가지고 있는 pod가 남아있는 상태에서, 아래 명령을 수행되면 기존은 Lable을 가진 POD가 새로 생성되지 않음
+//위 label을 가지고 있는 pod가 남아있는 상태에서, 아래 명령을 수행되면 기존은 Lable을 가진 POD가 이미 3개 있음으로  새로 생성되지 않음
 kubectl apply -f nginxweb-Replicaset.yaml
 
 root@pod641:~/KubernetesLearning/K8STraining# kubectl apply -f nginxweb-Replicaset.yaml
@@ -845,3 +845,282 @@ replicaset.apps/nginx-replicaset created
 kubectl delete -f nginxweb-Replicaset.yaml
 //ReplicaSet->Pod를 직접 호출하는 방식을 지양해야 함. 사용않함. Deployment->ReplicaSet->Pod 식으로 사용해야 함.
 //Rolling Update도 지원함
+
+
+=======================================================
+K8s Controller: Deployment
+-------------------------------------------------------
+-개념: 
+  .ReplicaSet을 제어해서 POD수를 조절하기 위한 목적으로 사용
+  .S/W Rolling Update & Rolling Back 용도로 사용
+  .Rolling Update는 "서비스 중단없이" S/W Version을 Upgrade할 때 사용
+  .Deployment -> ReplicaSet -> Pod 형식으로 사용하며, 가장 확장적이라 가장 보통으로 사용하는 방식임. Deployment가 ReplicaSet를 제어하고, ReplicaSet이 POD를 제어하는 방식
+  .POD 직접 배표, ReplicationController->POD, ReplicaSet->POD 방식은 테스트 용도로 사용하고 직접 배포는 지양
+  .Rolling Update 기능을 제외하면 ReplicaSet==Deployment는 같음
+
+
+nano nginxweb-Deployment.yaml
+---
+apiVersion: apps/v1
+#kind: ReplicaSet
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: "nginxweb"
+    matchExpressions:
+    - {key: version, operator: In, values: ["1.20", "1.21", "1.22", "latest"]}
+  template:
+    metadata:
+      name: nginxweb-pod
+      labels:
+        app: "nginxweb"
+        version: "1.21"
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+---
+
+kubectl get deployments && kubectl get replicaset && kubectl get pods 
+kubectl get depoy,rs,pod
+
+root@pod641:~/KubernetesLearning/K8STraining# kubectl get deploy,rs,pod
+NAME                                              READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nginx-deployment                  3/3     3            3           10m
+
+NAME                                                         DESIRED   CURRENT   READY   AGE
+replicaset.apps/nginx-deployment-6985b47657                  3         3         3       10m
+
+NAME                                                   READY   STATUS      RESTARTS   AGE
+pod/nginx-deployment-6985b47657-bg44b                  1/1     Running     0          10m
+pod/nginx-deployment-6985b47657-n47xd                  1/1     Running     0          10m
+pod/nginx-deployment-6985b47657-tppzg                  1/1     Running     0          10m
+root@pod641:~/KubernetesLearning/K8STraining#
+
+//deployment와 pod의 중간인 replicaset 삭제 시 동작확인
+kubectl delete replicasets.apps/nginx-deployment-6985b47657
+
+
+//Deployment Rolling Update & Rolling Back
+-Rolling Update: 서비스 운영 중 새로운 버젼으로 Upgrade
+  kubectl set image deployment <deployment_name> <container_name>=<new_version_image>
+
+-Rollback: 서비스 운영 중에 이전 버젼으로 Downgrade
+  kubectl rollout history deployment <deployment_name>
+  kubectl rollout undo deployment <deployment_name>
+
+
+//--record 옵션을 지정해서 다시 전개
+kubectl apply -f nginxweb-Deployment.yaml --record
+
+root@pod641:~/KubernetesLearning/K8STraining# kubectl describe pod/nginx-deployment-6985b47657-xfhdp
+Name:         nginx-deployment-6985b47657-xfhdp
+...
+  nginx-container:
+    Container ID:   docker://19985f742ecad02bc3697603c5ae94a31b135a15ae22bf9818f91918d1b1e95d
+    Image:          nginx:1.21
+...
+
+kubectl rollout history deployment nginx-deployment
+root@pod641:~/KubernetesLearning/K8STraining# kubectl rollout history deployment nginx-deployment
+deployment.apps/nginx-deployment
+REVISION  CHANGE-CAUSE
+1         kubectl apply --filename=nginxweb-Deployment.yaml --record=true
+
+
+//이미지의 버젼을 upgrade nginx:1.21 --> 1.22
+kubectl set image deployment nginx-deployment nginx-container=nginx:1.22 --record
+
+//Update하는 동안 아래명령을 빨리 쳐보세요.
+kubectl rollout status deployment nginx-deployment
+
+//Rolling Update 과정을 잠시 중지시키고 싶을 때
+kubectl rollout pause deployment nginx-deployment
+
+//잠시 중지시킨 것을 다시 재개
+kubectl rollout resume deployment nginx-deployment
+
+
+root@pod641:~/KubernetesLearning/K8STraining# kubectl describe pod nginx-deployment-5d6dd967c6-pqqcl
+...
+Containers:
+  nginx-container:
+    Container ID:   docker://cc1d2e6ee7aeb53e4369077b53b1460196f0a820fd1347ff4d472598b1680021
+    Image:          nginx:1.22
+...
+
+kubectl rollout history deployment nginx-deployment
+root@pod641:~/KubernetesLearning/K8STraining# kubectl rollout history deployment nginx-deployment
+deployment.apps/nginx-deployment
+REVISION  CHANGE-CAUSE
+1         kubectl apply --filename=nginxweb-Deployment.yaml --record=true
+2         kubectl set image deployment nginx-deployment nginx-container=nginx:1.22 --record=true
+
+//#1 1.21 버젼으로 Rollback
+kubectl rollout undo deployment nginx-deployment
+kubectl rollout undo deployment nginx-deployment --to-version=1
+
+
+=======================================================
+K8s Controller: DaemonSet & Rolling Update
+-------------------------------------------------------
+-개념: 
+  .K8s를 운영하는 전체 노드에서 Pod가 한 개씩 실행되도록 보장, docker swarm --mode global 옵션과 비슷
+  .전체 호스트에 대한 로그수집기, 모니터링 에이젼트와 같은 프로그램 실행 시 적용
+  .K8s 시스템 서비스 중 CNI(Container Network Interface), CSI(Container Storage Interface), kube-proxy,...등등이 이미 데몬셋으로 동작 중
+
+kubectl get daemonsets --all-namespaces
+root@pod641:~/KubernetesLearning/K8STraining# kubectl get daemonsets --all-namespaces
+NAMESPACE        NAME          DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
+kube-system      calico-node   2         2         0       2            0           kubernetes.io/os=linux   66d
+kube-system      kube-proxy    2         2         2       2            2           kubernetes.io/os=linux   66d
+metallb-system   speaker       2         2         2       2            2           kubernetes.io/os=linux   66d
+
+nano nginx-daemonset.yaml
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nginx-daemonset
+spec:
+#  replicas: 3
+  selector:
+    matchLabels:
+      app: "nginxweb"
+    matchExpressions:
+    - {key: version, operator: In, values: ["1.20", "1.21", "1.22", "latest"]}
+  template:
+    metadata:
+      name: nginxweb-pod
+      labels:
+        app: "nginxweb"
+        version: "1.21"
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+---
+
+
+root@pod641:~/KubernetesLearning/K8STraining# kubectl get daemonsets
+NAME              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+nginx-daemonset   2         2         2       2            2           <none>          38s
+
+
+root@pod641:~/KubernetesLearning/K8STraining# kubectl get nodes -o wide
+NAME     STATUS   ROLES                  AGE   VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION       CONTAINER-RUNTIME
+pod641   Ready    control-plane,master   66d   v1.20.0   218.145.56.75   <none>        Ubuntu 18.04.6 LTS   4.15.0-175-generic   docker://19.3.8
+pod642   Ready    <none>                 66d   v1.20.0   218.145.56.76   <none>        Ubuntu 18.04.5 LTS   4.15.0-175-generic   docker://19.3.8
+root@pod641:~/KubernetesLearning/K8STraining#
+
+
+root@pod641:~/KubernetesLearning/K8STraining# kubectl get pods
+NAME                                               READY   STATUS      RESTARTS   AGE
+nginx-daemonset-8c9qc                              1/1     Running     0          57s
+nginx-daemonset-zl7jx                              1/1     Running     0          57s
+
+//만약 새로운 노드가 K8s Cluster에 추가될 때 DaemonSet들은 자동적으로 생성된다. 노드당 하나의 Container 실행되도록 보장
+
+kubectl delete pod nginx-daemonset-zl7jx
+
+
+//Rolling Update
+kubectl edit daemonset nginx-daemonset
+...
+  spec:
+      containers:
+      - image: nginx:1.21 --> 1.22
+        imagePullPolicy: IfNotPresent
+...
+:wq!
+
+kubectl rollout history daemonset daemonset.apps/nginx-daemonset
+
+root@pod641:~/KubernetesLearning/K8STraining# kubectl rollout history daemonset daemonset.apps/nginx-daemonset
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+
+kubectl rollout undo daemonset nginx-daemonset
+
+
+=======================================================
+K8s Controller: StatefulSet
+-------------------------------------------------------
+-개념: 
+  .POD의 상태(POD의 이름, 볼륨(저장소),...)를 유지해 주는 컨트롤러
+  .ReplicationController나 ReplicaSet들은 수행해 POD이름 뒷쪽에 hash값이 들어감, 수량의 변경으로 추가/변경시 hash값이 변경되어 POD이름이 변경됨
+  .scale in/out시 순서데로 pod의 번호를 확장/축소
+  .예를들어 1번 POD가 삭제되면 다른 호스트에 1번 POD를 다시 만듬
+
+
+nano nginx-statefulset.yaml
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nginx-statfulset
+spec:
+  replicas: 3
+  serviceName: nginx-statefulset-svc
+  #podManagementPolicy: OrderReady //순차적으로 생김, 1번 생긴 후에 2번 생김
+  #podManagementPolicy: Parellel //번호는 다르지만 동시에 생김
+  selector:
+    matchLabels:
+      app: "nginxweb"
+    matchExpressions:
+    - {key: version, operator: In, values: ["1.20", "1.21", "1.22", "latest"]}
+  template:
+    metadata:
+      name: nginxweb-pod
+      labels:
+        app: "nginxweb"
+        version: "1.21"
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+---
+
+kubectl apply -f nginx-statefulset.yaml
+
+root@pod641:~/KubernetesLearning/K8STraining# kubectl get pods -o wide
+NAME                                               READY   STATUS      RESTARTS   AGE   IP               NODE     NOMINATED NODE   READINESS GATES
+nginx-statfulset-0                                 1/1     Running     0          20s   172.28.235.226   pod642   <none>           <none>
+nginx-statfulset-1                                 1/1     Running     0          18s   172.28.17.99     pod641   <none>           <none>
+nginx-statfulset-2                                 1/1     Running     0          15s   172.28.17.100    pod641   <none>           <none>
+
+
+kubectl delete pod nginx-statfulset-1
+
+kubectl scale statefulset nginx-statfulset --replicas=5
+kubectl scale statefulset nginx-statfulset --replicas=2
+
+//rolling update & rollback 도 가능함
+
+
+=====================================================================================
+프로그램 기동방법 3가지
+=====================================================================================
+1. Interactive: docker가 제공
+2. Service(Daemon): docker, docker-compose, docker-swarm이 제공
+3. Schedule job: kubernetes가 위 1, 2 + 제공
+
+
+
+=====================================================================================
+K8s Controller: Job & Cron Job
+=====================================================================================
+
+
+
