@@ -1,0 +1,22 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ubuntu-batch-job
+spec:
+  #competions: 5
+  #parallelism: 2
+  #activeDeadlineSeconds: 5
+  template:
+    spec:
+      containers:
+      - name: ubuntu-container
+        image: ubuntu:18.04
+        command: ["bash"]
+        args:
+        - "-c"
+        - "echo 'Hello Ubuntu'; sleep 30; echo 'Job Done.'"
+      #restartPolicy: Never
+      restartPolicy: OnFailure
+  backoffLimit: 3
+---

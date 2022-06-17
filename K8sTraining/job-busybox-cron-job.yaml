@@ -1,0 +1,24 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata: 
+  name: busybox-cron-job
+spec:
+  schedule: "*/2 * * * *"
+  startingDeadlineSeconds: 50
+  concurrencyPolicy: Allow
+  #concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: busybox-container
+            image: busybox:latest
+            args:            
+            - /bin/sh
+            - -c
+            - echo 'Job Started..'; date ; echo 'Job Done...'
+          #restartPolicy: Never
+          restartPolicy: OnFailure
+---

@@ -313,3 +313,40 @@ lpqxog.i7ngaww75f0oahan
 kubeadm reset 
 
 kubeadm
+
+=======================================================
+NGINX Load Balancer 만들기
+-------------------------------------------------------
+//서버목록 
+IP 10.100.0.254: nginx Load Balancer
+IP 10.100.0.101: server#1
+IP 10.100.0.102: server#2
+IP 10.100.0.103: server#3
+
+//NGINX Load Balancer 설정
+mkdir -p /etc/nginx
+cat << END >> /etc/nginx/nginx.conf 
+events {}
+stream {
+  upstream stream_backend {
+    least_conn;
+    server 10.100.0.101:6443;
+    server 10.100.0.102:6443;
+    server 10.100.0.103:6443;
+  }
+  server {
+    listen  6443;
+    proxy_pass stream_backend;
+    proxy_timeout 300s;
+    proxy_connect_timeout 1s;
+  }
+}
+END
+
+//도커로 수행
+docker run --name nginx-proxy -v /etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro --restart=always -p 6443:6443 -d nginx:latest
+
+//테스트
+curl 10.100.0.254:6443
+
+

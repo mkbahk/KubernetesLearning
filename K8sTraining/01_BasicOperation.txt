@@ -75,6 +75,26 @@ root@pod641:~#
 
 
 =======================================================
+Docker run과 Kubernetes run의 수행 구조의 차이
+-------------------------------------------------------
+//docker는 daemon/service실행이 아닌 경우 한번 실행하고 종료
+docker run -it --name helloworld hello-world:latest
+docker container ls
+docker container ls -a
+
+//kubernetes는 daemon/service가 아님에도 불구하고 running상태를 유지하려고 노력
+kubectl get pod --watch
+
+//다른 창에서
+kubectl run helloworld --image=hello-world:latest
+
+kubectl delete pod helloworld
+
+//차이만 보세요.
+docker run -it --name ubunturun ubuntu:18.04 echo 'Sleep 10Sec.';sleep 10;echo `date`;echo 'Sleep 10Sec.';sleep 10; echo 'Done!!'
+kubectl run ubuntrun --image=ubuntu:18.04 --command  bash echo 'Sleep 10Sec.';sleep 10;echo `date`;echo 'Sleep 10Sec.';sleep 10
+
+=======================================================
 K8s Commands 기본 수행 구조
 -------------------------------------------------------
 kubectl --help
@@ -260,6 +280,7 @@ release "nginxingweb" uninstalled
 
 //이제 부터는 k8s상에서 응용프로그램 배포는 .YAML로 합니다.
 //확인은 Kubernetes dashboard
+
 
 =======================================================
 K8s NAMESPACE: 가상자원의 집합 및 구별 ->자원할당 통제
@@ -1112,15 +1133,136 @@ kubectl scale statefulset nginx-statfulset --replicas=2
 =====================================================================================
 프로그램 기동방법 3가지
 =====================================================================================
-1. Interactive: docker가 제공
-2. Service(Daemon): docker, docker-compose, docker-swarm이 제공
-3. Schedule job: kubernetes가 위 1, 2 + 제공
+1. Interactive: docker가 제공 / 개인들이 주로 수행하는 방식
+2. Service(Daemon): docker, docker-compose, docker-swarm이 제공 / 기업들에서 수행하는 방식
+3. Schedule job: kubernetes가 위 1, 2 + 제공  / HPC(High Performance Computing), SuperComputer에서 사용하는 방식
 
+=====================================================================================
+K8s Controller: Job(Scheduled, Batch)
+=====================================================================================
+-개념: 
+  .수백대의 컴퓨터를 수천명의 사용자가 자원을 공유하면서 수행하는 방식
+  .자원점유 방식
+    -Interactive: 수행하고 필요한 자원없으면 수행종료, 있으면 수행, 수행완료 후 자원을 반환하여 다른 사람의 다른 프로그램이 사용가능
+    -Service: 자원이 존재하고, 점유한다는 전제로 지속 수행 중, 다른 프로그램과 자원공유하지 않음
+    -Job: 프로그램을 수행하고 자원이 없으면 대기, 자원이 할당되면 수행, 수행 후 자원반납
+  .스케쥴러란?
+    -자원 스케쥴: 모든 시스템의 자원의 사용유무를 보고받아 사용현황을 알고있고 중앙 데이타베이스에 유지 ex)GPU
+    -시간 스케쥴: 지정된 시간에 수행, 지정된 시간만큼만 수행
+    -프로그램 스케쥴: 여러대 호스트 중 사용하고자 하는 프로그램이 깔려져 있는 호스트에서 수행
+    -라이센스 스케쥴: 여러대 호스트에 프로그램들이 깔려있지만, 사용할 수 있는 숫자만큼만 수행
+  .유명한 스케쥴러
+    -Super Computing: IBM LSF, Slurm
+    -Hadoop: YARN
+    -Kubernetes: 자원, 시간 스케쥴링만 가능, 프로그램/라이센스X
+  .K8s Job
+    -Batch 작업을 수행함, 즉 서비스나 데몬 형태가 아닌 한번 잘 수행되었으면 종료, Interactive와 다른 점은 Scheduler가 자원이 존재하면 수행시키고, 없으면 대기 후, 자원이 사용가능하면 수행하고 완료를 항상 보장함
+    -작업이 완료되면 POD를 종료됨(계속 유지않됨, Docker & K8s의 차이점 중 K8s는 running 상태를 지속적으로 유지하려고 노력한다...)
+    -K8s Job Controller는 Batch처리에 적합한 컨트롤로로 Pod의 성공적인 완료를 보장
+      .비-정상 종료 시 다시 실행
+      .정상 종료 시 완료
+    
+
+nano job-ubuntu-batch-job.yaml
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ubuntu-batch-job
+spec:
+  #competions: 5
+  #parallelism: 2
+  #activeDeadlineSeconds: 50
+  template:
+    spec:
+      containers:
+      - name: ubuntu-container
+        image: ubuntu:18.04
+        command: ["bash"]
+        args:
+        - "-c"
+        - "echo 'Hello Ubuntu'; sleep 30; echo 'Job Done.'"
+      #restartPolicy: Never
+      restartPolicy: OnFailure
+  backoffLimit: 3
+---
+
+kubectl apply -f job-ubuntu-batch-job.yaml
+kubectl get jobs
+kubectl get pods
+kubectl logs ubuntu-batch-job-p95rn
+kubectl delete job ubuntu-batch-job
 
 
 =====================================================================================
-K8s Controller: Job & Cron Job
+K8s Controller: Cron Job
 =====================================================================================
+-개념:
+  .Linux Crontab과 같은 형태로 지정된 사간에 또는 반복되는 날짜와 시간에 Job이 수행되는 것
+  .데이타백업, 프로그램 수행 작업 완료 후 각종 뒷처리, Cleaning작업들에 사용
+  .CronJob -> Job -> POD -> Container 형태로 연결
+  .Scheuler Setting: 
+    -"* * * * *", *=매xx
+    -시중분(0~59), 일중시간(0~23), 월중날(1~31), 년중월(1~12), 주중날(0~6, 0:일, 6:토)
+    - * 부분은 */N, "N,N,...", "N-N" 형식으로 사용 가능
+    -예1) 매월 30일 오후 23시 정각에 실행: "0 23 30 * *"
+    -예2) 매주 일요일 0시 정각에 실행: "0 0 * * 0"
+    -예3) 주중 새벽 1시 정각에 실행: "0 1 * * 1-5"
+    -예4) 주말 오후 3시 정각에 실행: "0 15 * * 0,6"
+    -예5) 매 1분마다 실행: "* * * * *"
+    -예6) 매 5분마다 실행: "*/5 * * * *"
+    -예7) 매 2시간마다 실행: "0 */2 * * *"
+
+
+nano job-busybox-cron-job.yaml
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata: 
+  name: busybox-cron-job
+spec:
+  schedule: "*/2 * * * *"
+  #startingDeadlineSeconds: 500
+  #concurrencyPolicy: Allow
+  #concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: busybox-container
+            image: busybox:latest
+            args:            
+            - /bin/sh
+            - -c
+            - echo 'Job Started..'; date ; echo 'Job Done...'
+          #restartPolicy: Never
+          restartPolicy: OnFailure
+---
+
+kubectl get cronjobs
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get cronjobs
+NAME               SCHEDULE      SUSPEND   ACTIVE   LAST SCHEDULE   AGE
+busybox-cron-job   */2 * * * *   False     0        118s            3h9m
+
+kubectl get jobs
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get jobs
+NAME                          COMPLETIONS   DURATION   AGE
+busybox-cron-job-1655439600   1/1           5s         5m59s
+busybox-cron-job-1655439720   1/1           5s         3m59s
+busybox-cron-job-1655439840   1/1           5s         119s
+
+kubectl get pods
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get pods
+NAME                                               READY   STATUS      RESTARTS   AGE
+busybox-cron-job-1655439600-rb5vn                  0/1     Completed   0          6m11s
+busybox-cron-job-1655439720-z746z                  0/1     Completed   0          4m11s
+busybox-cron-job-1655439840-wqrkx                  0/1     Completed   0          2m11s
+busybox-cron-job-1655439960-7tgmc                  0/1     Completed   0          11s
+root@pod641:~/KubernetesLearning/K8sTraining#
 
 
 
