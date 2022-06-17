@@ -211,12 +211,6 @@ kubectl exec -it env-nginx-pod -- env
 kubectl exec -it env-nginx-pod -- env | grep MYENV
 
 
-
-
-
-
-
-
 =======================================================
 K8s Controller: Deployment Rolling Update를 Annotations을 이용하는 방법
 -------------------------------------------------------

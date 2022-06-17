@@ -1265,4 +1265,63 @@ busybox-cron-job-1655439960-7tgmc                  0/1     Completed   0        
 root@pod641:~/KubernetesLearning/K8sTraining#
 
 
+=====================================================================================
+K8s Service
+=====================================================================================
+-개념:
+  .여러대의 호스트에 동일한 기능을 가진 POD들을 위한 단일 서비스 진입점을 제공하는 것을 Service라 함
+  .기본적으로 서비스를 통해 POD에 접근하면 부하분산과 결함허용을 제공할 수 있다.
+  .POD가 가진 같은 Label를 기반으로 하나의 서비스그룹으로 묶을 수 있음, 서비스에 대표IP 지정가능
+  .마지막으로 외부공개용 IP를 가진 Load Balance의 공인IP:포트-->서비스IP:포트 로 연동되면 외부인터넷으로 서비스 가능
+  .Service Type: IP를 부여하는 방식
+    -ClusterIP(default): POD그룹의 단일 진입점(Virtual IP) 생성, 오직 그 Kubernetes Cluster안에서만 사용이 가능
+    -NodePort: ClusterIP가 생성된 후 모든 Worker Node에 외부에서 접속가능 한 포트가 예약, Node의 공인IP와 포트로 외부에서 접속가능
+    -LoadBalancer: 클라우드 인프라(AWS, Azure, GCP등)에서 API접근을 통해 외부 공인IP제공, Private Cloud의 경우 OpenStack에서 공인IP제공, K8s Cluster에서는 MetaLB와 같은 S/W적으로 공인 IP제공가능, LoadBalancer를 자동으로 프로비젼하는 기능제공
+    -ExternalName: 클러스터안의 CoreDNS와 외부DNS의 연동을 통해 가능, 클러스터 안에서 외부에 접속 시 사용할 도메일을 등록해서 사용, 클러스터 도메인이 실제 외부 도메인으로 치환되어 동작
+
+nano nginxweb-Deployment-Service.yaml
+---
+apiVersion: apps/v1
+#kind: ReplicaSet
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      "app": "nginxweb"
+  template:
+    metadata:
+      name: nginxweb-pod
+      labels:
+        "app": "nginxweb"
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginxweb-svc
+spec:
+  #clusterIP: x.y.w.z
+  selector:
+    "app": "nginxweb"
+  ports:
+  - protocol: TCP
+    port: 8880
+    targetPort: 80
+  type: LoadBalancer
+---
+#LB공인IP:8880->Service:8880 -> Deployment -> ReplicaSet->POD:80->Container:nginx:1.21:80
+---
+
+kubectl apply -f nginxweb-Deployment-Service.yaml
+
+curl http://LB공인IP:8880/
+
 
