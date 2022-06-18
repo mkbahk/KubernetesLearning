@@ -1,0 +1,38 @@
+---
+apiVersion: apps/v1
+#kind: ReplicaSet
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      "app": "nginxweb"
+  template:
+    metadata:
+      name: nginxweb-pod
+      labels:
+        "app": "nginxweb"
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginxweb-clusterip-svc
+spec:
+  #clusterIP: x.y.w.z
+  selector:
+    "app": "nginxweb"
+  ports:
+  - protocol: TCP
+    port: 8880
+    targetPort: 80
+  type: ClusterIP
+---
+

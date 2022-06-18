@@ -1,0 +1,73 @@
+#
+# 동작하지 않습니다. connection refused error
+#
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: devteam
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prodteam
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-ubuntu-pod-0
+  namespace: devteam
+  labels:
+    app: ubuntunodejs
+spec:
+  containers:
+  - name: ubuntu-container-0p80
+    image: mkbahk/ubuntu-tools:nodejs80
+    ports:
+    - containerPort: 80
+  - name: ubuntu-container-0p81
+    image: mkbahk/ubuntu-tools:nodejs81
+    ports:
+    - containerPort: 81
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-ubuntu-pod-1
+  namespace: prodteam
+  labels:
+    app: ubuntunodejs
+spec:
+  containers:
+  - name: ubuntu-container-1p80
+    image: mkbahk/ubuntu-tools:nodejs80
+    ports:
+    - containerPort: 80
+  - name: ubuntu-container-1p81
+    image: mkbahk/ubuntu-tools:nodejs81
+    ports:
+    - containerPort: 81
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ubuntunodejs-clusterip-svc
+spec:
+  #clusterIP: x.y.w.z
+  selector:
+    app: ubuntunodejs
+  ports:
+  - protocol: TCP
+    port: 8880
+    name: tcp-8880-80
+    targetPort: 80
+  - protocol: TCP
+    port: 8881
+    name: tcp-8881-81
+    targetPort: 81
+  type: ClusterIP
+---
+#kubectl exec -it -n devteam multi-ubuntu-pod-0 -c ubuntu-container-0p80 -- /bin/bash
+#kubectl exec -it -n devteam multi-ubuntu-pod-0 -c ubuntu-container-0p81 -- /bin/bash
+#kubectl exec -it -n prodteam multi-ubuntu-pod-1 -c ubuntu-container-1p80 -- /bin/bash
+#kubectl exec -it -n prodteam multi-ubuntu-pod-1 -c ubuntu-container-1p81 -- /bin/bash

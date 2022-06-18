@@ -1324,4 +1324,6 @@ kubectl apply -f nginxweb-Deployment-Service.yaml
 
 curl http://LB공인IP:8880/
 
+//실제 운영환경에서는 서비스 부하의 상황에 따라, scale명령으로 POD의 갯수 늘리거나 줄여가며 대응
+kubectl scale deployment nginx-deployment replicas=5
 

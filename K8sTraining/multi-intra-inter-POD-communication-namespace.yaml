@@ -1,0 +1,56 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: devteam
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prodteam
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-ubuntu-pod-0
+  namespace: devteam
+  labels:
+    "app": "nginxweb"
+spec:
+  containers:
+  - name: ubuntu-container-0p80
+    image: mkbahk/ubuntu-tools:nodejs80
+    ports:
+    - containerPort: 80
+  - name: ubuntu-container-0p81
+    image: mkbahk/ubuntu-tools:nodejs81
+    ports:
+    - containerPort: 81
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-ubuntu-pod-1
+  namespace: prodteam
+  labels:
+    "app": "nginxweb"
+spec:
+  containers:
+  - name: ubuntu-container-1p80
+    image: mkbahk/ubuntu-tools:nodejs80
+    ports:
+    - containerPort: 80
+  - name: ubuntu-container-1p81
+    image: mkbahk/ubuntu-tools:nodejs81
+    ports:
+    - containerPort: 81
+---
+
+
+#kubectl exec -it -n devteam multi-ubuntu-pod-0 -c ubuntu-container-0p80 -- /bin/bash
+#kubectl exec -it -n devteam multi-ubuntu-pod-0 -c ubuntu-container-0p81 -- /bin/bash
+#kubectl exec -it -n prodteam multi-ubuntu-pod-1 -c ubuntu-container-1p80 -- /bin/bash
+#kubectl exec -it -n prodteam multi-ubuntu-pod-1 -c ubuntu-container-1p81 -- /bin/bash
