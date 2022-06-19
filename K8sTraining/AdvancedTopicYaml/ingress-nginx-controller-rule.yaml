@@ -1,0 +1,29 @@
+---
+#apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-shop
+  namespace: ingress-nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx-example
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service: 
+            name: svc-shop-main
+            port: 
+              number: 80
+      - path: /payments
+        pathType: Prefix
+        backend:
+          service:
+            name: svc-shop-payments
+            port: 
+              number: 80
+---

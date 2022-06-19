@@ -496,15 +496,56 @@ Service Type: Load Balancer
   .Private Cloud의 경우 OpenStack, K8s 자체적으로 MetaLB등의 서비스 활용
   .LoadBalancer에게 nodeport에 매핑할 공인IP요청
   .NodePort를 예약 후 해당 NodePort로 외부 접근을 허용
+  .이름은 Load Balancer이지만 동적IP할당과 비슷함. MetalLB로 부터 공인IP를 동적으로 할당받고, NodePort를 통해 자체 LB기능 제공
 
+nano  nginx-service-LoadBalancer.yaml
+---
+apiVersion: apps/v1
+#kind: ReplicaSet
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      "app": "nginxweb"
+  template:
+    metadata:
+      name: nginxweb-pod
+      labels:
+        "app": "nginxweb"
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginxweb-loadbalancer-svc
+spec:
+  selector:
+    "app": "nginxweb"
+  ports:
+  - protocol: TCP
+    port: 8880
+    targetPort: 80
+    nodePort: 30303
+  type: LoadBalancer
+---
 
+kubectl apply -f  nginx-service-LoadBalancer.yaml
 
+kubectl get svc
 
+root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopicYaml# kubectl get svc
+NAME                                      TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)          AGE
+nginxweb-loadbalancer-svc                 LoadBalancer   10.104.224.42    218.145.56.86   8880:30303/TCP   8s
 
-
-
-
-
+kubectl delete -f  nginx-service-LoadBalancer.yaml
 
 
 
@@ -559,3 +600,212 @@ Events:  <none>
 root@pod641:~/KubernetesLearning/K8sTraining#
 
 kubectl run -it --rm busybox --image=busybox --restart=Never -- cat /etc/resolv.conf
+
+kubectl edit deployments/coredns -n kube-system
+
+kubectl rollout restart -n kube-system deployment/coredns
+
+kubectl edit cm coredns -n kube-system
+
+kubectl get pods -n kube-system -oname |grep coredns |xargs kubectl delete -n kube-system
+
+
+
+=======================================================
+Service: Headless Service
+-------------------------------------------------------
+-개념:
+  .ClusterIP가 없는 서비스로 단일 집입점이 필요 없을 때 사용
+  .Service와 연결된 Pod의 endpoint로 DNS 레코드가 생성됨
+  .Pod의 DNS주소: pod-ip-addr.namespace.pod.cluster.local
+  .일반 DNS 시스템들의 Name기반 LoadBalancing과 비슷함
+    IP IN A 192.168.0.20
+          A 192.168.0.21
+          A 192.168.0.22
+  .K8s Cluster 내부의 POD들 간 이름을 통한 통신이 목적임
+  .POD의 이름이 자주 변경되는 것 보다는 stateful POD와 함께 사용함.
+
+
+
+nano nginxweb-service-headless.yaml
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginxweb
+  template:
+    metadata:
+      name: nginxweb-pod
+      labels:
+        app: nginxweb
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginxweb-headless-svc
+spec:
+  #명시적으로 clusterIP를 None으로 지정하는 것이 headless service
+  clusterIP: None
+  selector:
+    app: nginxweb
+  ports:
+  - protocol: TCP
+    port: 8880
+    targetPort: 80
+  type: ClusterIP
+---
+
+kubectl describe svc nginxweb-headless-svc
+
+root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopicYaml# kubectl describe svc nginxweb-headless-svc
+Name:              nginxweb-headless-svc
+Namespace:         default
+Labels:            <none>
+Annotations:       <none>
+Selector:          app=nginxweb
+Type:              ClusterIP
+IP Families:       <none>
+IP:                None
+IPs:               None
+Port:              <unset>  8880/TCP
+TargetPort:        80/TCP
+Endpoints:         172.28.17.96:80,172.28.235.201:80,172.28.235.202:80
+Session Affinity:  None
+Events:            <none>
+root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopicYaml#
+
+
+root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopicYaml# kubectl get pods -o wide
+NAME                                               READY   STATUS      RESTARTS   AGE   IP               NODE     NOMINATED NODE   READINESS GATES
+nginx-deployment-6d6c9f5c49-4s66l                  1/1     Running     0          15m   172.28.235.201   pod642   <none>           <none>
+nginx-deployment-6d6c9f5c49-hg7w7                  1/1     Running     0          15m   172.28.235.202   pod642   <none>           <none>
+nginx-deployment-6d6c9f5c49-jncjt                  1/1     Running     0          15m   172.28.17.96     pod641   <none>           <none>
+ubuntu-pod                                         1/1     Running     1          13m   172.28.235.198   pod642   <none>           <none>
+
+
+//다른 창에서 ubuntu 또는  centos를 뛰운다.
+ kubectl run -it ubuntu-pod --image=mkbahk/ubuntu:tools
+  curl http://nginxweb-headless-svc.default.pod.cluster.local
+  curl http://202-235-28.172.default.pod.cluster.local
+  curl http://nginx-deployment-6d6c9f5c49-jncjt.default.pod.cluster.local
+
+
+
+=======================================================
+K8s kube-proxy  
+-------------------------------------------------------
+-개념:
+  .Kubernetes Service의 backend구현, 즉 서비스를 만들면 관련 iptables 테이블을 생성함, 관련된 서비스포트로 listenning 하고 있음.
+  .endpoint 연결을 위한 iptables 구성
+  .nodePort로의 접근과 Pod 연결을 iptables를 통해서 구현
+  .모든 node에 kube-proxy 가 돌고 있음.
+
+-kube-proxy 동작모드
+  .userspace
+    -클라이언드의 서비스 요청을 iptables를 거쳐 kube-proxy가 반아서 연결
+    -kubernetes 초기버젼에 감깐 사용
+  .iptables
+    -default kubernetes network mode
+    -kube-proxy는 서비스 API요청 시 iptables rule이 생성
+    -클라이언트 연결은 kube-proxy가 받아서 iptables rule을 통해 연결
+  .IPVS
+    -리눅스 커널이 지원하는 L4 LoadBalancing기술을 이용
+    -별도의 ipvs지원 모듈을 설정한 후 적용가능
+    -지원 알고리즘:
+      rr(round-robin)
+      lc(least connection)
+      dh(destination hashing)
+      sh(source hashing)
+      sed(shortest expected delay)
+      nc(network queue)
+
+kubectl apply -f nginx-service-nodeport.yaml
+
+root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopicYaml# kubectl get svc -o wide
+NAME                                      TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)          AGE   SELECTOR
+nginxweb-nodeport-svc                     NodePort       10.102.146.66    <none>          8880:30303/TCP   9s    app=nginxweb
+
+
+root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopicYaml# kubectl get pods -o wide
+NAME                                               READY   STATUS      RESTARTS   AGE   IP               NODE     NOMINATED NODE   READINESS GATES
+nginx-deployment-6d6c9f5c49-4tvg7                  1/1     Running     0          32s   172.28.17.97     pod641   <none>           <none>
+nginx-deployment-6d6c9f5c49-5btng                  1/1     Running     0          32s   172.28.235.205   pod642   <none>           <none>
+nginx-deployment-6d6c9f5c49-fswrb                  1/1     Running     0          32s   172.28.17.103    pod641   <none>           <none>
+
+
+root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopicYaml# iptables -t nat -S | grep 8880
+-A KUBE-SERVICES ! -s 172.28.0.0/16 -d 10.102.146.66/32 -p tcp -m comment --comment "default/nginxweb-nodeport-svc cluster IP" -m tcp --dport 8880 -j KUBE-MARK-MASQ
+-A KUBE-SERVICES -d 10.102.146.66/32 -p tcp -m comment --comment "default/nginxweb-nodeport-svc cluster IP" -m tcp --dport 8880 -j KUBE-SVC-ZP5HGCA4M42P3U25
+
+root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopicYaml# iptables -t nat -S | grep 30303
+-A KUBE-NODEPORTS -p tcp -m comment --comment "default/nginxweb-nodeport-svc" -m tcp --dport 30303 -j KUBE-MARK-MASQ
+-A KUBE-NODEPORTS -p tcp -m comment --comment "default/nginxweb-nodeport-svc" -m tcp --dport 30303 -j KUBE-SVC-ZP5HGCA4M42P3U25
+
+root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopicYaml# iptables -t nat -S | grep 80
+...
+-A KUBE-SEP-5QRCKXQNABOYPVG2 -p tcp -m comment --comment "default/nginxweb-nodeport-svc" -m tcp -j DNAT --to-destination 172.28.17.103:80
+-A KUBE-SEP-T5U6DNXZECZVJSRC -p tcp -m comment --comment "default/nginxweb-nodeport-svc" -m tcp -j DNAT --to-destination 172.28.17.97:80
+-A KUBE-SEP-TFHOGB2QYXAGPUPJ -p tcp -m comment --comment "default/nginxweb-nodeport-svc" -m tcp -j DNAT --to-destination 172.28.235.205:80
+...
+-A KUBE-SERVICES ! -s 172.28.0.0/16 -d 10.102.146.66/32 -p tcp -m comment --comment "default/nginxweb-nodeport-svc cluster IP" -m tcp --dport 8880 -j KUBE-MARK-MASQ
+-A KUBE-SERVICES -d 10.102.146.66/32 -p tcp -m comment --comment "default/nginxweb-nodeport-svc cluster IP" -m tcp --dport 8880 -j KUBE-SVC-ZP5HGCA4M42P3U25
+...
+
+
+=======================================================
+K8s Ingress
+-------------------------------------------------------
+-개념:
+  .http나 https를 통해 클러어스 내부의 서비스르 외부로 노출
+  .기능:
+    -Service에 외부 URL제공
+    -트래픽 로드밸런싱
+    -SSL 인증서 처리
+    -Virtual Hosting을 지정
+    -H/W L-4 Switch기능 중 L-7 URL Load LoadBalancing 기능 제공
+    -S/W 적으로 로는 NGINX가 전통적으로 이 역할을 수행
+    -K8s도 다양한 기능의 Ingress Controller가 있고, 기본적으로 NGINX를 이용한 Controller제공
+    -K8s 서버스와 WWW URL를 매팅하는 기술
+-Ingress 동작과정
+ .Client
+    -http://www.helloworld.net/
+    -http://www.helloworld.net/login
+    -http://www.helloworld.net/order
+  .Pod Ingress Controller(NGINX Ingress)
+  .Ingress Rules
+    -http://www.helloworld.net/ --> svc Main
+    -http://www.helloworld.net/login --> svc login
+    -http://www.helloworld.net/order --> svc order
+  .K8s Service
+    -Main Service exposes ClusterIP
+    -Login Service exposes ClusterIP
+    -Order Service expose ClusterIP
+
+     
+wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.2.0/deploy/static/provider/baremetal/deploy.yaml
+mv deploy ingress-nginx-controller-deploy.yaml
+
+kubectl apply -f nginx-ingress-controller-deploy.yaml
+kubectl apply -f ingress-nginx-controller-deployment-services.yaml
+kubectl apply -f ingress-nginx-controller-rule.yaml
+
+curl http://공인ip/
+
+//CoreDNS 이상동작으로 아래 에러발생
+root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopicYaml# kubectl apply -f  ingress-nginx-controller-rule.yaml
+Error from server (InternalError): error when creating "ingress-nginx-controller-rule.yaml": Internal error occurred: failed calling webhook "validate.nginx.ingress.kubernetes.io": Post "https://ingress-nginx-controller-admission.ingress-nginx.svc:443/networking/v1/ingresses?timeout=10s": context deadline exceeded
+root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopicYaml#
+
+

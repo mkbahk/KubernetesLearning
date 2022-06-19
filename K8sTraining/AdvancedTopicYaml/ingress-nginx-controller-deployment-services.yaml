@@ -1,0 +1,75 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-ingress-shop-main-deployment
+  namespace: ingress-nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      "app": "ingress-shop-main"
+  template:
+    metadata:
+      name: nginx-ingress-shop-main-pod
+      labels:
+        "app": "ingress-shop-main"
+    spec:
+      containers:
+      - name: nginx-main-container
+        image: mkbahk/nginx-ingress-controller-main-page:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-ingress-shop-payments-deployment
+  namespace: ingress-nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      "app": "nginx-shop-payments"
+  template:
+    metadata:
+      name: nginx-ingress-shop-payments-pod
+      labels:
+        "app": "nginx-shop-payments"
+    spec:
+      containers:
+      - name: nginx-payments-container
+        image: mkbahk/nginx-ingress-controller-payments-page:latest
+        ports:
+        - containerPort: 80
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-shop-main
+  namespace: ingress-nginx
+spec:
+  selector:
+    "app": "ingress-shop-main"
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-shop-payments
+  namespace: ingress-nginx
+spec:
+  selector:
+    "app": "nginx-shop-payments"
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+---
+

@@ -869,7 +869,7 @@ kubectl delete -f nginxweb-Replicaset.yaml
 
 
 =======================================================
-K8s Controller: Deployment
+K8s Controller: Deployment & Rolling Update
 -------------------------------------------------------
 -개념: 
   .ReplicaSet을 제어해서 POD수를 조절하기 위한 목적으로 사용
@@ -989,7 +989,7 @@ kubectl rollout undo deployment nginx-deployment --to-version=1
 
 
 =======================================================
-K8s Controller: DaemonSet & Rolling Update
+K8s Controller: DaemonSet 
 -------------------------------------------------------
 -개념: 
   .K8s를 운영하는 전체 노드에서 Pod가 한 개씩 실행되도록 보장, docker swarm --mode global 옵션과 비슷
@@ -1326,4 +1326,63 @@ curl http://LB공인IP:8880/
 
 //실제 운영환경에서는 서비스 부하의 상황에 따라, scale명령으로 POD의 갯수 늘리거나 줄여가며 대응
 kubectl scale deployment nginx-deployment replicas=5
+
+
+
+
+
+=====================================================================================
+K8s Label & selector + Canary Update
+=====================================================================================
+-개념:
+  .Node를 포함한 K8s pod, deployment등 모든 리소스에 인식번호 부착/할당
+  .리소스들의 특성을 분류하고, Selector를 이용해서 선택하기 위함
+  .Key-Value 쌍으로 적용
+
+-구성법:
+ .Label
+   metadata:
+     labels:
+       rel: stable
+       name: mainwebui
+  .Selector 
+    selector:
+      matchLabels:
+        key: value
+      matchExpression: 
+        - {key: name, operator: In, values: [mainwebui]}
+        - {key: rel, operator: NotIn, values: ["beta", "canary"]}
+
+--실습:
+
+nano label-demo.yaml
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: label-demo
+  labels:
+    environment: production
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+---
+
+kubectl apply -f label-demo.yaml
+
+kubectl get pods --show-labels
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get pods --show-labels
+NAME                                               READY   STATUS    RESTARTS   AGE   LABELS
+label-demo                                         1/1     Running   0          14s   app=nginx,environment=production
+
+kubectl get pods -l app=nginx -o wide --show-labels
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get pods -l app=nginx -o wide --show-labels
+NAME         READY   STATUS    RESTARTS   AGE     IP               NODE     NOMINATED NODE   READINESS GATES   LABELS
+label-demo   1/1     Running   0          4m30s   172.28.235.214   pod642   <none>           <none>            app=nginx,environment=production
+
+
 
