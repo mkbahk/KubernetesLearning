@@ -3,7 +3,7 @@
 Basic Concept
 -------------------------------------------------------
 -개념:
-  .K8s 핵심서비스를 담당하는 etcd, kube-api-server, kube-scheduler, kube-contraller-manager 조차 POD, Docker형태로 기동됨 
+  .K8s 핵심서비스를 담당하는 etcd, kube-api-server, kube-scheduler, kube-contraller-manager 조차 static POD, Docker형태로 기동됨 
   .daemon는 오직 kubelet 만 
 
 -kubelet daemon
@@ -23,6 +23,36 @@ drwxr-x--- 22 root root 4096 Jun 14 08:08 pods/
 root@pod641:/var/lib/kubelet#
 
 
+root@pod641:~/KubernetesLearning/K8sTraining# systemctl status kubelet
+● kubelet.service - kubelet: The Kubernetes Node Agent
+   Loaded: loaded (/lib/systemd/system/kubelet.service; enabled; vendor preset: enabled)
+  Drop-In: /etc/systemd/system/kubelet.service.d
+           └─10-kubeadm.conf
+   Active: active (running) since Mon 2022-04-11 07:54:32 KST; 2 months 9 days ago
+     Docs: https://kubernetes.io/docs/home/
+ Main PID: 123133 (kubelet)
+    Tasks: 266 (limit: 39321)
+   CGroup: /system.slice/kubelet.service
+           └─123133 /usr/bin/kubelet --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf --config=/var/lib/kubelet/config.yaml -
+
+Jun 20 09:10:10 pod641 kubelet[123133]: W0620 09:10:10.067704  123133 kubelet_pods.go:880] Unable to retrieve pull secret default/rtf-docker-registry for default/ipu-operator-vipu-
+Jun 20 09:11:00 pod641 kubelet[123133]: W0620 09:11:00.067053  123133 kubelet_pods.go:880] Unable to retrieve pull secret default/rtf-docker-registry for default/ipu-operator-contr
+Jun 20 09:11:40 pod641 kubelet[123133]: W0620 09:11:40.067029  123133 kubelet_pods.go:880] Unable to retrieve pull secret default/rtf-docker-registry for default/ipu-operator-vipu-
+Jun 20 09:12:13 pod641 kubelet[123133]: W0620 09:12:13.067351  123133 kubelet_pods.go:880] Unable to retrieve pull secret default/rtf-docker-registry for default/ipu-operator-contr
+Jun 20 09:13:03 pod641 kubelet[123133]: W0620 09:13:03.067309  123133 kubelet_pods.go:880] Unable to retrieve pull secret default/rtf-docker-registry for default/ipu-operator-vipu-
+Jun 20 09:13:35 pod641 kubelet[123133]: W0620 09:13:35.067214  123133 kubelet_pods.go:880] Unable to retrieve pull secret default/rtf-docker-registry for default/ipu-operator-contr
+Jun 20 09:14:06 pod641 kubelet[123133]: W0620 09:14:06.067105  123133 kubelet_pods.go:880] Unable to retrieve pull secret default/rtf-docker-registry for default/ipu-operator-vipu-
+Jun 20 09:15:04 pod641 kubelet[123133]: W0620 09:15:04.067084  123133 kubelet_pods.go:880] Unable to retrieve pull secret default/rtf-docker-registry for default/ipu-operator-contr
+Jun 20 09:15:10 pod641 kubelet[123133]: W0620 09:15:10.067052  123133 kubelet_pods.go:880] Unable to retrieve pull secret default/rtf-docker-registry for default/ipu-operator-vipu-
+Jun 20 09:16:21 pod641 kubelet[123133]: W0620 09:16:21.067046  123133 kubelet_pods.go:880] Unable to retrieve pull secret default/rtf-docker-registry for default/ipu-operator-contr
+lines 1-21/21 (END)
+
+//시스템을 전원Off까지 재기동했을 때는 반드시
+swap off 
+systemctl start kubelet
+
+
+//kubelet외의 각종 기능들은 Static POD(kubelet에 의해 자동기동되는, kubectl로 통제가 않되고)형태로 기동됨
 cat /var/lib/kubelet/config.yaml
 ...
 staticPodPath: /etc/kubernetes/manifests
@@ -59,9 +89,10 @@ kubeadm completion bash | sudo tee /etc/bash_completion.d/kubeadm > /dev/null
 //ssh disconnect & reconnect
 
 
+kubectl version
 kubeadm version
 kubelet --version
-kubectl version
+
 
 kubectl cluster-info
 
@@ -72,6 +103,12 @@ Metrics-server is running at https://218.145.56.75:6443/api/v1/namespaces/kube-s
 
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 root@pod641:~#
+
+kubectl get nodes -o wide
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get nodes -o wide
+NAME     STATUS   ROLES                  AGE   VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION       CONTAINER-RUNTIME
+pod641   Ready    control-plane,master   70d   v1.20.0   218.145.56.75   <none>        Ubuntu 18.04.6 LTS   4.15.0-175-generic   docker://19.3.8
+pod642   Ready    <none>                 70d   v1.20.0   218.145.56.76   <none>        Ubuntu 18.04.5 LTS   4.15.0-175-generic   docker://19.3.8
 
 
 =======================================================
@@ -285,7 +322,11 @@ release "nginxingweb" uninstalled
 =======================================================
 K8s NAMESPACE: 가상자원의 집합 및 구별 ->자원할당 통제
 -------------------------------------------------------
--가상자원: CPU, MEMORY, NETWORK(1G, 10G, 100G, ETHERNET, INFINBAND,...), STORAGE(1G, 10G, 100G), GPU/IPU/FPGA,...
+-개념:
+  .가상자원: CPU, MEMORY, NETWORK(1G, 10G, 100G, ETHERNET, INFINBAND,...), STORAGE(1G, 10G, 100G), GPU/IPU/FPGA,...
+  .가상자원들을 구별하고, 향후 각 Namespace에 대한 관리자 입장의 자원할당의 통제 목적, 사용자입장은 pod생성시 자원최대할당 제한을 줄 수 있음
+
+-실습:
 
 kubectl create namespace devteam
 kubectl get namespaces
@@ -330,8 +371,6 @@ spec:
   restartPolicy: Always
 status: {}
 root@pod641:~#
-
-
 
 
 kubectl get pods
@@ -433,6 +472,10 @@ K8s Pod with Single and Multi Container
   .하나의 POD는 IP_Address가, POD안의 컨테이너들은 TCP/UDP PORT로 구별됨
   .컨테이너를 표현하는 K8s API의 최소단위
 
+
+-실습:
+
+
 // multl-nginx-nodsjs-pod.yaml
 ---
 apiVersion: v1
@@ -500,7 +543,13 @@ kubectl exec -it multi-nginx-ubuntu-pod -c ubuntu-container -- /bin/bash
 kubectl delete -f multi-nginx-ubuntu-pod.yaml
 
 
-//Image Update를 통한 POD S/W update
+-K8s POD 배포방법 3가지:
+  .Blue/Green Updata
+  .Rolling Update
+  .Canary Update
+
+//Image Update를 통한 POD S/W update(Blue/Green)
+nano nginx_sw_upgrade_pod.yaml
 ---
 apiVersion: v1
 kind: Pod
@@ -561,6 +610,8 @@ K8s Pod Self-healing
       - /data/files  
 
 
+-실습:
+
 nano nginx-self-healing.yaml
 ---
 apiVersion: v1
@@ -618,6 +669,15 @@ K8s Controller: ReplicationController
   .selector: 숫자를 유지하기 위해 POD의 Label 모니터링하는 지시자, RC는 이것만을 모니터링 함.
   .replicas: 유지할 POD의 갯수
   .template: 수행시킬 container template
+
+-K8s POD 배포방법 3가지:
+  .Blue/Green Updata
+  .Rolling Update
+  .Canary Update
+
+
+-실습:
+
 
 cat nginxweb-replication-controller.yaml
 ---
@@ -804,6 +864,8 @@ K8s Controller: ReplicaSet
   .DoesNotExist: key와 다른 label의 pod를 연결
 
 
+-실습:
+
 nano nginxweb-Replicaset.yaml
 ---
 apiVersion: apps/v1
@@ -879,6 +941,12 @@ K8s Controller: Deployment & Rolling Update
   .POD 직접 배표, ReplicationController->POD, ReplicaSet->POD 방식은 테스트 용도로 사용하고 직접 배포는 지양
   .Rolling Update 기능을 제외하면 ReplicaSet==Deployment는 같음
 
+-K8s POD 배포방법 3가지:
+  .Blue/Green Updata
+  .Rolling Update
+  .Canary Update
+
+-실습:
 
 nano nginxweb-Deployment.yaml
 ---
@@ -996,6 +1064,8 @@ K8s Controller: DaemonSet
   .전체 호스트에 대한 로그수집기, 모니터링 에이젼트와 같은 프로그램 실행 시 적용
   .K8s 시스템 서비스 중 CNI(Container Network Interface), CSI(Container Storage Interface), kube-proxy,...등등이 이미 데몬셋으로 동작 중
 
+-실습:
+
 kubectl get daemonsets --all-namespaces
 root@pod641:~/KubernetesLearning/K8STraining# kubectl get daemonsets --all-namespaces
 NAMESPACE        NAME          DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
@@ -1083,6 +1153,8 @@ K8s Controller: StatefulSet
   .예를들어 1번 POD가 삭제되면 다른 호스트에 1번 POD를 다시 만듬
 
 
+-실습:
+
 nano nginx-statefulset.yaml
 ---
 apiVersion: apps/v1
@@ -1163,6 +1235,8 @@ K8s Controller: Job(Scheduled, Batch)
       .정상 종료 시 완료
     
 
+-실습:
+
 nano job-ubuntu-batch-job.yaml
 ---
 apiVersion: batch/v1
@@ -1213,6 +1287,8 @@ K8s Controller: Cron Job
     -예6) 매 5분마다 실행: "*/5 * * * *"
     -예7) 매 2시간마다 실행: "0 */2 * * *"
 
+
+-실습:
 
 nano job-busybox-cron-job.yaml
 ---
@@ -1279,6 +1355,9 @@ K8s Service
     -LoadBalancer: 클라우드 인프라(AWS, Azure, GCP등)에서 API접근을 통해 외부 공인IP제공, Private Cloud의 경우 OpenStack에서 공인IP제공, K8s Cluster에서는 MetaLB와 같은 S/W적으로 공인 IP제공가능, LoadBalancer를 자동으로 프로비젼하는 기능제공
     -ExternalName: 클러스터안의 CoreDNS와 외부DNS의 연동을 통해 가능, 클러스터 안에서 외부에 접속 시 사용할 도메일을 등록해서 사용, 클러스터 도메인이 실제 외부 도메인으로 치환되어 동작
 
+
+-실습:
+
 nano nginxweb-Deployment-Service.yaml
 ---
 apiVersion: apps/v1
@@ -1338,14 +1417,15 @@ K8s Label & selector + Canary Update
   .Node를 포함한 K8s pod, deployment등 모든 리소스에 인식번호 부착/할당
   .리소스들의 특성을 분류하고, Selector를 이용해서 선택하기 위함
   .Key-Value 쌍으로 적용
+  .K8s는 정말 Label을 많이 쓰고, Label중심으로 운영됩니다.
 
 -구성법:
- .Label
+ .Label 구성
    metadata:
      labels:
        rel: stable
        name: mainwebui
-  .Selector 
+  .Selector 선택
     selector:
       matchLabels:
         key: value
@@ -1353,14 +1433,14 @@ K8s Label & selector + Canary Update
         - {key: name, operator: In, values: [mainwebui]}
         - {key: rel, operator: NotIn, values: ["beta", "canary"]}
 
---실습:
+-실습:
 
 nano label-demo.yaml
 ---
 apiVersion: v1
 kind: Pod
 metadata:
-  name: label-demo
+  name: label-demo-pod
   labels:
     environment: production
     app: nginx
@@ -1374,15 +1454,297 @@ spec:
 
 kubectl apply -f label-demo.yaml
 
+//lable 확인
 kubectl get pods --show-labels
 root@pod641:~/KubernetesLearning/K8sTraining# kubectl get pods --show-labels
 NAME                                               READY   STATUS    RESTARTS   AGE   LABELS
-label-demo                                         1/1     Running   0          14s   app=nginx,environment=production
+label-demo-pod                                     1/1     Running   0          14s   app=nginx,environment=production
 
+//lable 확인
 kubectl get pods -l app=nginx -o wide --show-labels
 root@pod641:~/KubernetesLearning/K8sTraining# kubectl get pods -l app=nginx -o wide --show-labels
-NAME         READY   STATUS    RESTARTS   AGE     IP               NODE     NOMINATED NODE   READINESS GATES   LABELS
-label-demo   1/1     Running   0          4m30s   172.28.235.214   pod642   <none>           <none>            app=nginx,environment=production
+NAME            READY   STATUS    RESTARTS   AGE     IP               NODE     NOMINATED NODE   READINESS GATES   LABELS
+label-demo-pod   1/1     Running   0          4m30s   172.28.235.214   pod642   <none>           <none>            app=nginx,environment=production
+
+//label 생성/변경
+kubectl label pod label-demo-pod app=nginx2 --overwrite 
+kubectl label pod label-demo-pod app=nginx2 rel=beta --overwrite
+
+// '-' 문자로 label 제거
+kubeclt label pod label-demo-pod app-
+
+//selector
+kubectl get pods --selector app=nginx -o wide --show-labels
 
 
+
+=====================================================================================
+K8s Node Label
+=====================================================================================
+-개념:
+  .Spec이 다르거나, 특정 서버만 GPU가 있거나, SSD만 가지고 있거나
+  .POD를 실행 시 특정 Label를 가진 서버에서 배치(실행)되도록 활용
+  .K8s는 Node Label과 Selector를 통해 Resource Scheduling이 가능함
+
+-실습:
+
+//node label 보기
+kubectl get nodes --show-labels
+
+//-l, -L
+kubectl get nodes -L beta.kubernetes.io/arch=amd64
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get nodes  -L beta.kubernetes.io/arch=amd64
+NAME     STATUS   ROLES                  AGE   VERSION   ARCH=AMD64
+pod641   Ready    control-plane,master   69d   v1.20.0
+pod642   Ready    <none>                 69d   v1.20.0
+
+//생성 및 변경
+kubectl label node pod642 accelerator="nvidia-v100"
+kubectl label node pod641 gpu="nvidia-a100" cpu="AMD_EPYC_7742_64_Core" disk="ssd"
+kubectl get nodes -l accelerator="nvidia-v100" --show-labels
+
+//제거
+kubectl label node pod642 accelerator-
+
+//기 할당된 label들은
+kubectl get nodes --show-labels
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get nodes --show-labels
+NAME     STATUS   ROLES                  AGE   VERSION   LABELS
+pod641   Ready    control-plane,master   69d   v1.20.0   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ipunode=true,kubernetes.io/arch=amd64,kubernetes.io/hostname=pod641,kubernetes.io/os=linux,node-role.kubernetes.io/control-plane=,node-role.kubernetes.io/master=
+pod642   Ready    <none>                 69d   v1.20.0   accelerator=nvidia-V100,beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,ipunode=true,kubernetes.io/arch=amd64,kubernetes.io/hostname=pod642,kubernetes.io/os=linux
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get nodes -L gpu,cpu,disk
+NAME     STATUS   ROLES                  AGE   VERSION   GPU           CPU                     DISK
+pod641   Ready    control-plane,master   69d   v1.20.0
+pod642   Ready    <none>                 69d   v1.20.0   nvidia-a100   AMD_EPYC_7742_64-Core   ssd
+
+
+nano label-node-label.yaml
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: node-label-pod
+  labels:
+    environment: production
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+  nodeSelector:
+    #조건이 2개 이상이면 AND 조건, true, false, yes, no는 반드시 ""로 묶여야 함
+    accelerator: "nvidia-a100"
+    disk: "ssd"
+---
+
+
+
+kubectl apply -f label-node-label.yaml
+
+//label매칭이 잘못되었을 때의 예
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get nodes -L gpu,ssd,cpu
+NAME     STATUS   ROLES                  AGE   VERSION   GPU           SSD   CPU
+pod641   Ready    control-plane,master   69d   v1.20.0
+pod642   Ready    <none>                 69d   v1.20.0   nvidia-a100         AMD_EPYC_7742_64-Core
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get pods -L gpu,ssd,cpu
+NAME                                               READY   STATUS    RESTARTS   AGE   GPU   SSD   CPU
+node-label-pod                                    0/1     Pending   0          46s
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl logs node-label-demo
+root@pod641:~/KubernetesLearning/K8sTraining#
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl describe pods node-label-pod
+...
+Conditions:
+  Type           Status
+  PodScheduled   False
+...
+Events:
+  Type     Reason            Age    From               Message
+  ----     ------            ----   ----               -------
+  Warning  FailedScheduling  2m30s  default-scheduler  0/2 nodes are available: 2 node(s) didn't match Pod's node affinity.
+  Warning  FailedScheduling  2m30s  default-scheduler  0/2 nodes are available: 2 node(s) didn't match Pod's node affinity.
+
+
+kubectl delete -f label-node-label.yaml
+
+
+=====================================================================================
+K8s Annotation
+=====================================================================================
+-개념:
+  .Label과 동일하게 key-value를 통해 리소스의 특성을 기록
+  .Kubernetes에게 특정정보를 전달할 용도로 사용, 사용자가 K8s를 관리하는 관리자에게 정보를 전달하는 용도로 사용
+    -예를 들어 Deployments의 rolling upgrade 정보 기록, --record보다 새로운 방식, Rolling-upgrade history로 아래 version 1.15 가 기록됨
+    annotations:
+      kubernetes.io/change-cause: version 1.15
+  .관리를 위해 필요한 정보를 기록할 용도로 사용
+    -릴리즈, 로깅, 모니터링에 필요한 정보들을 기록, kubectl describe 정보로 확인가능
+    annotations:
+      builder: "Moon-Kee Bahk(mkbahk@megazone.com)"
+      buildDate: "2022-06-20"
+      imageRegistry: "http://dockerhub.com/mkbahk"
+
+-실습:
+
+nano annotations-demo
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: annotations-demo-pod
+  annotations:
+    builder: "Moon-Kee Bahk(mkbahk@megazone.com)"
+    buildDate: "2022-06-20"
+    imageregistry: "https://dockerhub.com/"
+  labels:
+    environment: production
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+---
+
+kubectl apply -f  annotations-demo
+kubectl describe pods annotations-demo-pod
+
+=====================================================================================
+K8s Application Deployment 종합: Canary Deployment
+=====================================================================================
+-K8s POD 배포방법 3가지:
+  .Blue/Green Updata
+  .Rolling Update
+  .Canary Update
+
+-개념(Canary Update):
+  .기본의 버젼을 유지한 채로 일부 버젼만 신규 버전으로 올려서 신규 버전에 버그나 이상이 없는 확인하면서 배포해 나가는 방법
+
+-실습:
+
+nano nginxweb-canary-Deployment-Service.yaml
+---
+apiVersion: apps/v1
+#kind: ReplicaSet
+kind: Deployment
+metadata:
+  name: nginx-v121stable-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: "nginxweb"
+      version: "v121stable"
+  template:
+    metadata:
+      name: nginxweb-v121stable-pod
+      labels:
+        app: "nginxweb"
+        version: "v121stable"
+    spec:
+      containers:
+      - name: nginx-container-121
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+---
+apiVersion: apps/v1
+#kind: ReplicaSet
+kind: Deployment
+metadata:
+  name: nginx-v122alpha-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "nginxweb"
+      version: "v122alpha"
+  template:
+    metadata:
+      name: nginxweb-v122alpha-pod
+      labels:
+        app: "nginxweb"
+        version: "v122alpha"
+    spec:
+      containers:
+      - name: nginx-container-122
+        image: nginx:1.22
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginxweb-svc
+spec:
+  selector:
+    app: "nginxweb"
+  ports:
+  - protocol: TCP
+    port: 8880
+    targetPort: 80
+  type: LoadBalancer
+---
+#LB공인IP->Server:8880 -> Deployment -> ReplicaSet->POD:80->Container:nginx:1.21:80 
+---
+
+kubectl apply -f  nginxweb-canary-Deployment-Service.yaml
+
+kubectl get deployments.apps
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get deployments.apps
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-v121stable-deployment       3/3     1            3           23m
+nginx-v122alpha-deployment        1/1     1            1           23m
+root@pod641:~/KubernetesLearning/K8sTraining#
+
+
+//이상이 없으면 
+BLUE/OLD: replicas: 3->2
+GREEN/NEW: replicas: 1->2
+kubectl scale deployment nginx-v121stable-deployment --replicas=2
+kubectl scale deployment nginx-v122alpha-deployment --replicas=2
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get deployments.apps
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-v121stable-deployment       2/2     2            2           23m
+nginx-v122alpha-deployment        2/2     2            2           23m
+
+
+kubectl describe svc nginxweb-svc
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl describe svc nginxweb-svc
+Name:                     nginxweb-svc
+Namespace:                default
+Labels:                   <none>
+Annotations:              <none>
+Selector:                 app=nginxweb
+Type:                     LoadBalancer
+IP Families:              <none>
+IP:                       10.106.28.16
+IPs:                      10.106.28.16
+LoadBalancer Ingress:     218.145.56.86
+Port:                     <unset>  8880/TCP
+TargetPort:               80/TCP
+NodePort:                 <unset>  31835/TCP
+Endpoints:                172.28.17.115:80,172.28.17.116:80,172.28.235.217:80 + 1 more...
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:
+  Type    Reason        Age                  From                Message
+  ----    ------        ----                 ----                -------
+  Normal  IPAllocated   32m                  metallb-controller  Assigned IP "218.145.56.86"
+  Normal  nodeAssigned  98s (x247 over 21m)  metallb-speaker     announcing from node "pod641"
+
+
+kubectl scale deployment nginx-v121stable-deployment --replicas=0
+kubectl scale deployment nginx-v122alpha-deployment --replicas=3
+
+kubectl delete deployment nginx-v121stable-deployment
 
