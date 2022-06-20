@@ -1748,3 +1748,83 @@ kubectl scale deployment nginx-v122alpha-deployment --replicas=3
 
 kubectl delete deployment nginx-v121stable-deployment
 
+
+
+
+
+=====================================================================================
+K8s Volume Mount
+=====================================================================================
+-개념:
+  .일반적으로 관리자는 NFS서버나, 분산병렬스토리지(Minio, StorageOS, WEKA.IO, OpenEBS, Portworx, Rook, GlusterFS, Ceph,...) 등을 사용하여
+  .미리 동적으로 볼륨을 할당할 수 있는 K8s CSI(Container Storage Interface)를 통해 StorageClass-PVC-PV-Storage 연동을 통해 자동으로 볼륨을 마운팅해 사용할 수 있도록 한다.
+
+-실습:
+
+nano nginx-service-LoadBalancer-volume-mount.yaml
+---
+apiVersion: apps/v1
+#kind: ReplicaSet
+kind: Deployment
+metadata:
+  name: nginx-volume-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      "app": "nginxweb"
+  template:
+    metadata:
+      name: nginxweb-genhtml-pod
+      labels:
+        "app": "nginxweb"
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+        volumeMounts:
+          - name: nfs-pvc
+            mountPath: "/usr/share/nginx/html"
+      - name: ubuntu-genhtml-container
+        image: mkbahk/ubuntu-genhtml:latest
+        volumeMounts:
+          - name: nfs-pvc
+            mountPath: "/usr/share/nginx/html"
+      volumes:
+        - name: nfs-pvc
+          persistentVolumeClaim:
+            claimName: default
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginxweb-volume-svc
+spec:
+  selector:
+    "app": "nginxweb"
+  ports:
+  - protocol: TCP
+    port: 8680
+    targetPort: 80
+  type: LoadBalancer
+---
+
+kubectl get storageclasses.storage.k8s.io
+
+root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopicYaml# kubectl get storageclasses.storage.k8s.io
+NAME                PROVISIONER                                   RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+default (default)   k8s-sigs.io/nfs-subdir-external-provisioner   Delete          Immediate           false                  39d
+
+kubectl get pvc
+root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopicYaml# kubectl get pvc
+NAME      STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+default   Bound    pvc-9818ecbc-bab8-4bc3-9f93-81e984a02ec4   1Gi        RWX            default        39d
+
+kubectl get pv
+root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopicYaml# kubectl get pv
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM             STORAGECLASS   REASON   AGE
+pvc-9818ecbc-bab8-4bc3-9f93-81e984a02ec4   1Gi        RWX            Delete           Bound    default/default   default                 39d
+
+

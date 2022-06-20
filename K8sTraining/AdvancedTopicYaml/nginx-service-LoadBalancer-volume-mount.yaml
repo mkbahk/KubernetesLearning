@@ -1,0 +1,49 @@
+---
+apiVersion: apps/v1
+#kind: ReplicaSet
+kind: Deployment
+metadata:
+  name: nginx-volume-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      "app": "nginxweb"
+  template:
+    metadata:
+      name: nginxweb-genhtml-pod
+      labels:
+        "app": "nginxweb"
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+        volumeMounts:
+          - name: nfs-pvc
+            mountPath: "/usr/share/nginx/html"
+      - name: ubuntu-genhtml-container
+        image: mkbahk/ubuntu-genhtml:latest
+        volumeMounts:
+          - name: nfs-pvc
+            mountPath: "/usr/share/nginx/html"
+      volumes:
+        - name: nfs-pvc
+          persistentVolumeClaim:
+            claimName: default            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginxweb-volume-svc
+spec:
+  selector:
+    "app": "nginxweb"
+  ports:
+  - protocol: TCP
+    port: 8680
+    targetPort: 80
+  type: LoadBalancer
+---
+

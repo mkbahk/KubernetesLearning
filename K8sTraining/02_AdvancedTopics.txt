@@ -808,4 +808,130 @@ root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopicYaml# kubectl apply -f
 Error from server (InternalError): error when creating "ingress-nginx-controller-rule.yaml": Internal error occurred: failed calling webhook "validate.nginx.ingress.kubernetes.io": Post "https://ingress-nginx-controller-admission.ingress-nginx.svc:443/networking/v1/ingresses?timeout=10s": context deadline exceeded
 root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopicYaml#
 
+=======================================================
+ConfigMap
+-------------------------------------------------------
 
+
+
+=======================================================
+Secret
+-------------------------------------------------------
+-개념:
+  .ConfigMap: 컨테이너 구성정보를 한곳에 모아서 관리
+  .Secret: 컨테이너가 사용하는 Password, auth token, ssh key와 같은 중요한 정보를 저장하고 민감한 구성정보를 base64fh 인코딩해서 한 곳에 모아서 관리
+  .민감하지 않는 일반 설정파일 configMap을 사용하고, 민감한 데이타는 secret를 사용
+  .Secret 데이타 전달 방법
+    -Command-line Argument
+    -Environment Variable
+    -Volume Mount 
+-Secret 만들기:
+  .kubectl create secret <Available Commands> name [flags][options]
+    -docker-registry: Docker registry에 사용하기 위한 secret를 만듬
+    -generic: local file, directory or liternal value로 부터 secret를 만듬
+    -tls: TLS secret를 만듦
+  . K8s-Docker App.들이 수행 중 외부의 서비스들과 통신하기 위한 보안정보 저장하는 것
+
+-실습:
+kubectl create secret tls my-tls-secret --cert=path/to/cert/file --key=path/to/key/file
+kubectl create secret docker-registry reg-secret --docker-username=tiger --docker-password=pass --docker-email=mkbahk@gmail.com
+kubectl create secret generic mkbahk-secret --from-literal=INTERVAL=2 --from-file=./genid-web-config/
+
+
+
+
+=======================================================
+Node/Pod Affinity & antiAffinity
+-------------------------------------------------------
+-개념:
+  .노드의 특정 집합에만 Pod를 스케쥴 하도록 지시
+  .nodeSelector: selector field에 명시된 모든 Label이 포함되어 배치됨
+  .nodeAffinity: 특정 노드에만 포드가 실핼되도록 유도
+  .nodeAffinity 요구사항
+    -엄격한 요구: requiredDuringSchedulingIgnoredDuringExecution
+    -선호적 요구: preferredDuringSchedulingIgnoredDuringExecution
+
+  .pod 스케쥴링
+    -podAffinity: pod를 가깝게 배치하기
+    -podAntiAffinity: pod를 더 멀리 배치하기
+  .podAffinity 요구사항
+    -엄격한 요구: requiredDuringSchedulingIgnoredDuringExecution
+    -선호적 요구: preferredDuringSchedulingIgnoredDuringExecution
+  .topologyKey
+    -노드 label을 이용해 pod의 affinity와 antiAffinity를 설정할 수 있는 또 하나의 기준
+    -K8s는 Pod를 스케쥴링 할 때 먼저 Pod의 label을 기준으로 대상 노드를 찾고, 이후 topologyKey 필드를 확인해 해당 노드가 원하는 노드인지 확인
+
+
+
+
+
+=======================================================
+taint & toleration 
+-------------------------------------------------------
+-개념:
+  .node taint, Pod toleration
+  .worker node에 taint가 설정된 경우 동일 값의 toleration이 있으면 Pod만 배치
+  .toleration이 있는 Pod는 동일한 taint가 있는 node를 포함하여 모든 node에 배치된다.
+  .effect 필드 종류
+    -NoSchedule: toleration이 맞지 않으면 배치되지 않음
+    -PreferNoSchedule: toleration이 맞지 않으면 배치되지 않으나, 클러스터 전체의 리소스가 부족하면 할당됨
+    -NoExecute: toleration이 맞으면 동작중인 Pod들을 종료하고 배치
+
+  
+=======================================================
+cordon 
+-------------------------------------------------------
+-개념: 
+  .노드 스케쥴링 중단(cordon) 및 허용(uncordon)
+  .특정 노드에 pod 스케쥴을 금지하거나 해제
+
+kubectl [cordon | uncordon] NODE [options]
+
+
+=======================================================
+drain 
+-------------------------------------------------------
+-개념: 노드비우기
+  .특정 노드에서 동작중인 모든 pod를 제거
+
+-실습:
+
+kubectl drain NODE [options]
+  --ignore-daemonsets: DaemonSet-managed pod들은 ignore
+  --force=false: RC, RS, job, DaemonSet 또는 StatefulSet에서 관리하지 않는 Pod까지 제거
+
+kubectl drain node2 --force --ignore-daemonsets
+
+
+
+=======================================================
+인증 및 권한부여 
+-------------------------------------------------------
+-개념:
+  .API 접근제어
+  .인증(user, ServiceAccount)
+  .권한관리(Role/RoleBinding, ClusterRole/ClusterRoleBinding)
+
+kubectl config view
+
+cat ./kube/config
+
+kubectl get csr 
+
+//관리자가 승인해주는 명령
+kubectl certificate approve myuser
+
+//인증서 받기
+kubectl get csr/myuser -o yaml
+
+//role만들기
+kubectl create role developer-role --verb=create --verb=get --verb=list --verb=update --verb=delete --resource=pods
+kubectl create rolebining developer-role-binding-myuser --role=developer-role --user=myservice
+
+kubectl create clusterrole developer-role --verb=create --verb=get --verb=list --verb=update --verb=delete --resource=pods
+kubectl create clusterrolebining developer-role-binding-myuser --role=developer-role --user=myservice
+
+kubectl get clusterrole
+
+kubectl describe clusterrole view
+kubectl describe clusterrole cluster-admin
