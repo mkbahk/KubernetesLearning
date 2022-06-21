@@ -1,0 +1,27 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginxweb-pod
+  labels:
+    "app": "nginxweb"
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginxweb-svc
+spec:
+  selector:
+    "app": "nginxweb"
+  ports:
+  - protocol: TCP
+    port: 8780
+    targetPort: 80
+  type: LoadBalancer
+---

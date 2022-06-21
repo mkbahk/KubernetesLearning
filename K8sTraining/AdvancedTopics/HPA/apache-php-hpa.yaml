@@ -1,0 +1,38 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apache-php-hpa-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      "app": "hpaweb"
+  template:
+    metadata:
+      name: hpaweb-pod
+      labels:
+        "app": "hpaweb"
+    spec:
+      containers:
+      - name: k8s-hpa-load-container
+        image: mkbahk/k8s-hpa-load:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 200m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hpaweb-svc
+spec:
+  selector:
+    "app": "hpaweb"
+  ports:
+  - protocol: TCP
+    port: 8480
+    targetPort: 80
+  type: LoadBalancer
+---
