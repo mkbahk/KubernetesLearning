@@ -1,0 +1,25 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storage-nfs-pod
+  labels:
+    environment: production
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: nfsdata
+      mountPath: /usr/share/nginx/html
+  nodeSelector:
+    kubernetes.io/hostname: pod642
+  volumes:
+    - name: nfsdata
+      nfs:
+        server: 218.145.56.74
+        path: /localdata/nfs_kube/nfsdata
+---

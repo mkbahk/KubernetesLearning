@@ -1758,8 +1758,163 @@ K8s Volume Mount
 -개념:
   .일반적으로 관리자는 NFS서버나, 분산병렬스토리지(Minio, StorageOS, WEKA.IO, OpenEBS, Portworx, Rook, GlusterFS, Ceph,...) 등을 사용하여
   .미리 동적으로 볼륨을 할당할 수 있는 K8s CSI(Container Storage Interface)를 통해 StorageClass-PVC-PV-Storage 연동을 통해 자동으로 볼륨을 마운팅해 사용할 수 있도록 한다.
+  .Volume은 Kubernetes 스토리지의 추상화된 개념
+    -컨터이너는 Pod에 바인딩되는 볼륨을 마운트하고 마치 로컬 파일시스템에 있는 것처럼 스토리지에 접근함
+  .Kubernetes 스토리지에
+    volumes:
+    - name: htmldata
+      hostPath:
+        path: /hostdir_or_file
+  .컨테이너 단위로 mount
+    volumeMounts:
+    - name: htmldata
+      mountPath: /usr/share/nginx/html
 
 -실습:
+1) emptyDir: 가상 임시디렉토리, Pod가 삭제되면 스토리지도 삭제, 한 POD내의 container끼지 임시 정보 공유를 위해 사용
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storage-emptydir-pod
+  labels:
+    environment: production
+    app: nginx
+spec:
+  containers:
+  - name: nginx-container-1
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: cache-volume
+      mountPath: /usr/share/nginx/html
+  - name: nginx-container-2
+    image: mkbahk/ubuntu-genhtml:latest
+    volumeMounts:
+    - name: cache-volume
+      mountPath: /usr/share/nginx/html
+  nodeSelector:
+    kubernetes.io/hostname: pod642
+  volumes:
+    - name: cache-volume
+      emptyDir: {}
+---
+
+kubectl exec -it storage-emptydir-pod -c nginx-container-1 -- /bin/bash
+kubectl exec -it storage-emptydir-pod -c nginx-container-2 -- /bin/bash
+
+
+
+2) hostPath
+volumes:
+- name: html
+  hostPath:
+    path: /hostdir_or_file
+    type: DirectoryOrCreate
+
+//HostPath Type
+  .DirectoryOrCreate: default type, 주어진 경로에 아무것도 없다면, 필요에 따라 kubelet의 소유권 권한을 0755로 설정한 빈 디렉토리 생성
+  .Directory: 주어진 경로에 디렉토리가 있어야 함
+  .FileOrCreate: 주어진 경로에 아무것도 없다면, 필요에 따라 kubelet의 소유권 권한을 0755로 설정한 빈 파일을 생성
+  .File: 주어진 경로에 파일이 있어야 함
+
+
+//pod642 호스트에서 mkdir -p /tmp/htmldata 만들고, 임의의 index.html 파일을 하나 만듭니다.
+
+nano storage-hostpath-nginx-node-label.yaml
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storage-hostpath-pod
+  labels:
+    environment: production
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: htmldata
+      mountPath: /usr/share/nginx/html
+  nodeSelector:
+    kubernetes.io/hostname: pod642
+  volumes:
+    - name: htmldata
+      hostPath:
+        path: /tmp/htmldata
+---
+
+kubectl apply -f storage-hostpath-nginx-node-label.yaml
+kubectl exec storage-hostpath-pod -- /bin/bash
+cd /usr/share/nginx/html
+ls -al
+
+3) NFS Volume Mount
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storage-nfs-pod
+  labels:
+    environment: production
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: nfsdata
+      mountPath: /usr/share/nginx/html
+  nodeSelector:
+    kubernetes.io/hostname: pod642
+  volumes:
+    - name: nfsdata
+      nfs:
+        server: 218.145.56.74
+        path: /localdata/nfs_kube/nfsdata
+---
+
+
+4) Multi-Volume Mount
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storage-multi-volume-pod
+  labels:
+    environment: production
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: htmldata
+      mountPath: /usr/share/nginx/html
+    - name: nfs-pvc-pv-auto
+      mountPath: /mnt/nfs-pvc-pv-auto
+  nodeSelector:
+    kubernetes.io/hostname: pod642
+  volumes:
+    - name: htmldata
+      hostPath:
+        path: /tmp/htmldata
+    - name: nfs-pvc-pv-auto
+      persistentVolumeClaim:
+        claimName: fast     
+---
+
+
+5) StorageClass->PVC-PV-NFS AutoMount
 
 nano nginx-service-LoadBalancer-volume-mount.yaml
 ---

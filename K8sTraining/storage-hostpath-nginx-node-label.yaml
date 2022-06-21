@@ -1,0 +1,25 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storage-hostpath-pod
+  labels:
+    environment: production
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: htmldata
+      mountPath: /usr/share/nginx/html
+  nodeSelector:
+    kubernetes.io/hostname: pod642
+  volumes:
+    - name: htmldata
+      hostPath:
+        path: /tmp/htmldata
+        type: DirectoryOrCreate
+---

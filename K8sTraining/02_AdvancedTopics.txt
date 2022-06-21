@@ -935,3 +935,60 @@ kubectl get clusterrole
 
 kubectl describe clusterrole view
 kubectl describe clusterrole cluster-admin
+
+
+
+//pv-pvc
+
+//hostpath pv
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-hostpath
+spec:
+  capacity:
+    storage: 2Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: hostpath-manual
+  persistentVolumeReclaimPolicy: Delete
+  hostPath:
+    path: /tmp/pv-hostpath
+---
+
+//nfs pv
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-nfs
+spec:
+  capacity:
+    storage: 2Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  - ReadWriteMany
+  storageClassName: mfs-slow
+  persistentVolumeReclaimPolicy: Recycle
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+  nfs:
+    path: /localdata/nfs_kube/pv-nfs
+    server: 218.145.56.74
+---
+
+
+root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopics/Storage# kubectl get persistentvolume
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM             STORAGECLASS      REASON   AGE
+pv-hostpath                                2Gi        RWO            Delete           Available                     hostpath-manual            9m5s
+pv-nfs                                     2Gi        RWO,RWX        Recycle          Available                     mfs-slow                   7s
+pvc-846885a0-7eaa-4cc0-9258-a4d828b82c84   1Gi        RWX            Delete           Bound       default/fast      fast                       106m
+pvc-8f4cb732-0f91-48f4-90e4-b571cef45aef   1Gi        RWX            Delete           Bound       default/bigdata   bigdata                    106m
+pvc-9511ad1a-d2ef-4b3c-97af-925b7f28b03a   1Gi        RWX            Delete           Bound       default/backup    backup                     106m
+pvc-9818ecbc-bab8-4bc3-9f93-81e984a02ec4   1Gi        RWX            Delete           Bound       default/default   default                    40d
+root@pod641:~/KubernetesLearning/K8sTraining/AdvancedTopics/Storage#
+

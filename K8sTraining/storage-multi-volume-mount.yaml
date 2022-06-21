@@ -1,0 +1,29 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storage-multi-volume-pod
+  labels:
+    environment: production
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: htmldata
+      mountPath: /usr/share/nginx/html
+    - name: nfs-pvc-pv-auto
+      mountPath: /mnt/nfs-pvc-pv-auto
+  nodeSelector:
+    kubernetes.io/hostname: pod642
+  volumes:
+    - name: htmldata
+      hostPath:
+        path: /tmp/htmldata
+    - name: nfs-pvc-pv-auto
+      persistentVolumeClaim:
+        claimName: fast     
+---
