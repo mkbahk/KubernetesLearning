@@ -14,20 +14,6 @@ spec:
     - containerPort: 80
 ---
 apiVersion: v1
-kind: Pod
-metadata:
-  name: nginxweb-pod-1-23-0
-  labels:
-    app: "nginxweb"
-    version: "1.23.0"
-spec:
-  containers:
-  - name: nginx-container
-    image: nginx:1.23.0
-    ports:
-    - containerPort: 80
----
-apiVersion: v1
 kind: Service
 metadata:
   name: nginxweb-svc-bluegreen
@@ -40,4 +26,17 @@ spec:
     targetPort: 80
   type: LoadBalancer
 ---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginxweb-pod-1-23-0
+  labels:
+    app: "nginxweb"
+    version: "1.23.0"
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx:1.23.0
+    ports:
+    - containerPort: 80
 #kubectl delete pod nginxweb-pod-1-21-0
