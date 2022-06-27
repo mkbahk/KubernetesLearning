@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,3 +11,4 @@ data:
       protocol: layer2
       addresses:
       - 218.145.56.80-218.145.56.83
+---
