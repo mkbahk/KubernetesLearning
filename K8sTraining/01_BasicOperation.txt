@@ -543,10 +543,11 @@ kubectl exec -it multi-nginx-ubuntu-pod -c ubuntu-container -- /bin/bash
 kubectl delete -f multi-nginx-ubuntu-pod.yaml
 
 
--K8s POD 배포방법 3가지:
-  .Blue/Green Updata
-  .Rolling Update
-  .Canary Update
+-K8s POD 배포방법 4가지:
+  .Recreate by POD/Deploymemt
+  .Blue/Green Updata by Service
+  .Rolling Update by Deployment
+  .Canary Update by Ingress Controller
 
 //Image Update를 통한 POD S/W update(Recreate)
 nano nginx_sw_upgrade_pod.yaml

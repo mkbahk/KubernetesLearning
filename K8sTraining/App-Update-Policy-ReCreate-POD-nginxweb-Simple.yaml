@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: recreate-upgrade-policy-by-pod
+  labels:
+    "app": "nginxweb"
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx:1.21.0
+# upgrade from nginx:1.21 to 1.23.0
+    ports:
+    - containerPort: 80
+---
+#kubectl get pods -o wide --watch

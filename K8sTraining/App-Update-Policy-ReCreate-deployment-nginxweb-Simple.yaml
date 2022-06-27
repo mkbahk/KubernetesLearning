@@ -1,0 +1,31 @@
+---
+apiVersion: apps/v1
+#kind: ReplicaSet
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: "nginxweb"
+    matchExpressions:
+    - {key: version, operator: In, values: ["1.20.0", "1.21.0", "1.22.0", "1.23.0", "latest"]}
+  template:
+    metadata:
+      name: nginxweb-pod
+      labels:
+        app: "nginxweb"
+        version: "1.23.0"
+        #Upgrade 1.21.0->1.23.0
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.23.0
+        #Upgrade 1.21.0->1.23.0
+        ports:
+        - containerPort: 80
+---
