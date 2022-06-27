@@ -5,7 +5,7 @@ metadata:
   name: nginx-ingress-shop-main-deployment
   namespace: ingress-nginx
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       "app": "ingress-shop-main"
@@ -27,15 +27,15 @@ metadata:
   name: nginx-ingress-shop-payments-deployment
   namespace: ingress-nginx
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
-      "app": "nginx-shop-payments"
+      "app": "ingress-shop-payments"
   template:
     metadata:
       name: nginx-ingress-shop-payments-pod
       labels:
-        "app": "nginx-shop-payments"
+        "app": "ingress-shop-payments"
     spec:
       containers:
       - name: nginx-payments-container
@@ -43,7 +43,6 @@ spec:
         ports:
         - containerPort: 80
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -65,11 +64,12 @@ metadata:
   namespace: ingress-nginx
 spec:
   selector:
-    "app": "nginx-shop-payments"
+    "app": "ingress-shop-payments"
   ports:
   - protocol: TCP
     port: 80
     targetPort: 80
   type: ClusterIP
 ---
+# 위의 서비스로는 외부에서 직접 들어오지 않는다. 반드시 ingress-nginx-controller에서 지정된 공인IP로 들어와야 한다.
 

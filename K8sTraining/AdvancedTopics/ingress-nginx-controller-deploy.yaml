@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -336,7 +337,10 @@ spec:
     app.kubernetes.io/component: controller
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
-  type: NodePort
+#  type: NodePort
+  type: LoadBalancer
+# 모든 Web Service는 위의 LoadBalancer의 공인IP로 들어와야 한다.
+# 내부 Web Server/K8s Service로는 직접 들어오지 않는다.
 ---
 apiVersion: v1
 kind: Service
@@ -392,7 +396,9 @@ spec:
         - /nginx-ingress-controller
         - --election-id=ingress-controller-leader
         - --controller-class=k8s.io/ingress-nginx
+        # 핵심연결고리
         - --ingress-class=nginx
+        # 핵심연결고리
         - --configmap=$(POD_NAMESPACE)/ingress-nginx-controller
         - --validating-webhook=:8443
         - --validating-webhook-certificate=/usr/local/certificates/cert
@@ -613,3 +619,4 @@ webhooks:
     resources:
     - ingresses
   sideEffects: None
+---
