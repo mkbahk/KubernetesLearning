@@ -6,9 +6,13 @@ metadata:
   labels:
     "app": "nginxweb"
 spec:
+  #
+  hostname: nginx1210
+  subdomain: nginxweb-svc
+  #호스트 이름과 서브도메인이 K8s svc의 이름과 같은 경우로 지정된면 CoreDNS에 nginx2120.nginxweb-svc.default.svc.cluster.local 로 등록된다.
   containers:
   - name: nginx-container
-    image: nginx:1.21.0
+    image: mkbahk/nginx:1.21.0
     ports:
     - containerPort: 80
 ---

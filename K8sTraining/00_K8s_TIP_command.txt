@@ -6,16 +6,23 @@ kubectl delete pods --all
 kubectl rollout restart -n kube-system deployment/coredns
 
 
-
 //html파일이 지속적으로 변하는 것 시뮬레이션
 docker run -it -d -p 8680:80 mkbahk/nginx:rig
 docker exec -it 4a99e02e9794 /genhtml.sh
+
 
 //여러노드 동시 선택
 kubectl label node node{2,3} gpu=true disktype=ssd
 kubectl get nodes -L gpu,disktype
 
+
 //taint 찾기
 kubectl describe nodes mater | grep -i taint
 
+// nslookup, ping, ifconfig 설치하기
+apt update
+apt install dnsutils inetutils-ping net-tools -y
 
+nslookup nginx1210.nginxweb-svc
+nslookup nginx1210.nginxweb-svc.default.svc.cluster.local
+nslookup ip-ip-ip-ip.default.pod.cluster.local

@@ -6,9 +6,11 @@ metadata:
   labels:
     "app": "nginxweb"
 spec:
+  #hostname: nginx1210
+  #subdomain: hellosub
   containers:
   - name: nginx-container
-    image: nginx:1.21
+    image: mkbahk/nginx:1.21.0
     ports:
     - containerPort: 80
 ---

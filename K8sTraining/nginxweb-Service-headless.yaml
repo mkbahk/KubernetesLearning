@@ -48,4 +48,4 @@ spec:
     port: 8780
     targetPort: 80
 ---
-#nsookup nginx1220.headless-svc
+#nslookup nginx1220.headless-svc

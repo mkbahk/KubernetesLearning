@@ -123,7 +123,7 @@ docker container ls -a
 kubectl get pod --watch
 
 //다른 창에서
-kubectl run helloworld --image=hello-world:latest
+kubectl run -it helloworld --image=hello-world:latest
 
 kubectl delete pod helloworld
 
@@ -136,15 +136,15 @@ K8s Commands 기본 수행 구조
 -------------------------------------------------------
 kubectl --help
 kubectl command --help
-kubectl run <자원이름> <옵션>
+kubectl run <자원이름> <옵션>   //docker run
 #kubectl create -f file_name.yaml
 kubectl create -f file_name.yaml
 
 kubectl get <자원이름> <객체이름>
 kebectl edit <자원이름> <객체이름>
-kubectl describe <자원이름> <객체이름>
+kubectl describe <자원이름> <객체이름>  //docker inspect
 
-kubectl delete <자원이름> <객체이름>
+kubectl delete <자원이름> <객체이름>  //docker stop + docker container rm
 
 kubectl api-resources
 
@@ -196,8 +196,13 @@ multiweb-dc7ddc4f8-p7j7c                           1/1     Running     0        
 multiweb-dc7ddc4f8-wtsp8                           1/1     Running     0          2m53s   172.28.235.250   pod642   <none>           <none>
 
 kubectl get deployments.apps multiweb -o yaml
+kubectl delete deployments.apps multiweb
+
+
+
 
 //Container 내부 명령어 수행하기
+kubectl run nginxweb --image=nginx:1.14 --port 80
 kubectl get pods
 
 root@pod641:~# kubectl get pods
@@ -209,16 +214,20 @@ kubectl exec nginxweb -it -- /bin/bash
 kubectl logs nginxweb
 
 kubectl describe pod nginxweb   //docker inspect를 대신하는 명령
-kubectl port-forward nginxweb 8380:80  //개발환경에서 테스팅용도만, 실제는 Load Balancer사용
+kubectl port-forward --address 0.0.0.0 nginxweb 8380:80  //개발환경에서 테스팅용도만, 실제는 Load Balancer사용
 
-root@pod641:~# kubectl port-forward nginxweb 8380:80
-Forwarding from 127.0.0.1:8380 -> 80
-Forwarding from [::1]:8380 -> 80
-
+root@pod641:~/KubernetesLearning# kubectl port-forward --address 0.0.0.0 nginxweb 8380:80
+Forwarding from 0.0.0.0:8380 -> 80
+Handling connection for 8380
 Handling connection for 8380
 Ctrl+c 
 
+//브라우저에서
+http://218.145.56.75:8380/
 
+
+
+kubectl create deployment multiweb --image=httpd:latest --replicas=3
 root@pod641:~# kubectl get pods
 NAME                                               READY   STATUS      RESTARTS   AGE
 multiweb-dc7ddc4f8-27w89                           1/1     Running     0          11h
@@ -234,7 +243,6 @@ spec:
 ...
 Esc
 Esc
-
 :wq!
 
 root@pod641:~# kubectl get deployments.apps
@@ -269,10 +277,11 @@ spec:
 status: {}
 
 kubectl apply -f nginxweb-k8s-run-mkbahk-20220617.yaml
+//dashboard 화면에서도 yaml파일 내용을 입력해 보세요.
+
 
 // 이제부터는 왠만한 모든 실행은 .YAML로 합니다. 
-// github나 dockerhub처럼 이 .YAML들만 전문적으로 저장하고 있는 장소가 
-// helm repogitory: https://artifacthub.io/ 입니다.
+
 
 kubectl apply -f nginxweb-k8s-run-mkbahk-20220617.yaml
 
@@ -290,7 +299,11 @@ kubectl apply -f https://raw.githubusercontent.com/mkbahk/KubernetesLearning/mai
 kubectl delete -f https://raw.githubusercontent.com/mkbahk/KubernetesLearning/main/K8STraining/nginxweb-k8s-run-mkbahk-20220617.yaml
 
 
-// https://artifacthub.io/ 에서 nginx찻아서 수행하는 방법
+
+// github나 dockerhub처럼 이 .YAML들만 전문적으로 저장하고 있는 장소가 
+// helm repogitory: https://artifacthub.io/ 입니다.
+
+// https://artifacthub.io/ 에서 nginx차아서 수행하는 방법
 // nginx-ingress 찾으세요.
 
 helm repo add nginx-stable https://helm.nginx.com/stable
