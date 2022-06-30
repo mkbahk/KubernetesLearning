@@ -299,6 +299,9 @@ kubectl apply -f https://raw.githubusercontent.com/mkbahk/KubernetesLearning/mai
 kubectl delete -f https://raw.githubusercontent.com/mkbahk/KubernetesLearning/main/K8STraining/nginxweb-k8s-run-mkbahk-20220617.yaml
 
 
+==================================================================================
+Heml: YAML 설정 집합소, 설정파일을 각각 개발사가 유지하고, 사용법과 링크만 가지고 있음.
+----------------------------------------------------------------------------------
 
 // github나 dockerhub처럼 이 .YAML들만 전문적으로 저장하고 있는 장소가 
 // helm repogitory: https://artifacthub.io/ 입니다.
@@ -331,6 +334,69 @@ release "nginxingweb" uninstalled
 //이제 부터는 k8s상에서 응용프로그램 배포는 .YAML로 합니다.
 //확인은 Kubernetes dashboard
 
+//helm으로 apache 설치하는 방법
+root@pod641:~# helm repo add bitnami https://charts.bitnami.com/bitnami
+"bitnami" has been added to your repositories
+
+root@pod641:~# helm repo update
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "bitnami" chart repository
+Update Complete. ⎈Happy Helming!⎈
+
+root@pod641:~# helm repo list
+NAME    URL
+bitnami https://charts.bitnami.com/bitnami
+
+
+root@pod641:~# helm install myapacheweb bitnami/apache
+NAME: myapacheweb
+LAST DEPLOYED: Thu Jun 30 20:14:51 2022
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+CHART NAME: apache
+CHART VERSION: 9.1.11
+APP VERSION: 2.4.54
+
+** Please be patient while the chart is being deployed **
+
+1. Get the Apache URL by running:
+
+** Please ensure an external IP is associated to the myapacheweb service before proceeding **
+** Watch the status using: kubectl get svc --namespace default -w myapacheweb **
+
+  export SERVICE_IP=$(kubectl get svc --namespace default myapacheweb --template "{{ range (index .status.loadBalancer.ingress 0) }}{{ . }}{{ end }}")
+  echo URL            : http://$SERVICE_IP/
+
+
+WARNING: You did not provide a custom web application. Apache will be deployed with a default page. Check the README section "Deploying your custom web application" in https://github.com/bitnami/charts/blob/master/bitnami/apache/README.md#deploying-your-custom-web-application.
+
+root@pod641:~# helm list
+NAME            NAMESPACE       REVISION        UPDATED                                 STATUS          CHART           APP VERSION
+myapacheweb     default         1               2022-06-30 20:14:51.836201562 +0900 KST deployed        apache-9.1.11   2.4.54
+
+root@pod641:~# kubectl get svc
+NAME          TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)                      AGE
+kubernetes    ClusterIP      10.96.0.1       <none>          443/TCP                      3d2h
+myapacheweb   LoadBalancer   10.106.233.48   218.145.56.86   80:32568/TCP,443:30785/TCP   81s
+
+//browser이용해서
+http://218.145.56.86:80
+
+
+root@pod641:~# helm uninstall myapacheweb
+release "myapacheweb" uninstalled
+
+root@pod641:~# helm list
+NAME    NAMESPACE       REVISION        UPDATED STATUS  CHART   APP VERSION
+
+root@pod641:~# helm repo list
+NAME    URL
+bitnami https://charts.bitnami.com/bitnami
+root@pod641:~# helm repo remove bitnami
+"bitnami" has b
 
 =======================================================
 K8s NAMESPACE: 가상자원의 집합 및 구별 ->자원할당 통제
@@ -472,6 +538,9 @@ K8s API Version
   .services               v1
   .PersistentVolume       v1
 
+kubectl api-versions
+kubectl api-resources
+
 //Resource들의 API Version을 확인하는 명령
 kubectl explain pod
 
@@ -487,7 +556,6 @@ K8s Pod with Single and Multi Container
 
 
 -실습:
-
 
 // multl-nginx-nodsjs-pod.yaml
 ---
@@ -556,11 +624,12 @@ kubectl exec -it multi-nginx-ubuntu-pod -c ubuntu-container -- /bin/bash
 kubectl delete -f multi-nginx-ubuntu-pod.yaml
 
 
--K8s POD 배포방법 4가지:
+-K8s POD 배포방법 5가지:
   .Recreate by POD/Deploymemt
-  .Blue/Green Updata by Service
-  .Rolling Update by Deployment
-  .Canary Update by Ingress Controller
+  .Blue/Green Updata by Service/Deploymemt
+  .Ramped(Rolling) Update by Deployment
+  .Canary Update by Ingress Controller/Deploymemt
+  .A/B Test/Deploymemt
 
 //Image Update를 통한 POD S/W update(Recreate)
 nano nginx_sw_upgrade_pod.yaml
@@ -663,7 +732,7 @@ K8s Controller
   .K8s 핵심구성요소: etcd, controller, scheduler, api-server, CoreDNS, Kubelet-Daemon 중 Controller기능 및 역할
   .Cotroller: 어떤 Resource(ex. Pod, ...)를 지정된 갯수 만큼 유지(모니터링, 보장)하는 기능
   .Controller의 종류:
-    1) ReplicationController -> POD
+    1) ReplicationController, ReplicaSet -> POD
     2) DemonSet -> POD
     3) Deployment -> ReplicaSet -> POD
     4) Statefull Set -> POD
@@ -684,10 +753,12 @@ K8s Controller: ReplicationController
   .replicas: 유지할 POD의 갯수
   .template: 수행시킬 container template
 
--K8s POD 배포방법 3가지:
+-K8s POD 배포방법 5가지:
+  .ReCreate
   .Blue/Green Updata
-  .Rolling Update
+  .Ramped(Rolling) Update
   .Canary Update
+  .A/B Test
 
 
 -실습:
@@ -955,10 +1026,12 @@ K8s Controller: Deployment & Rolling Update
   .POD 직접 배표, ReplicationController->POD, ReplicaSet->POD 방식은 테스트 용도로 사용하고 직접 배포는 지양
   .Rolling Update 기능을 제외하면 ReplicaSet==Deployment는 같음
 
--K8s POD 배포방법 3가지:
+-K8s POD 배포방법 5가지:
+  .ReCreate
   .Blue/Green Updata
-  .Rolling Update
+  .Ramped(Rolling) Update
   .Canary Update
+  .A/B Test
 
 -실습:
 
@@ -1164,7 +1237,8 @@ K8s Controller: StatefulSet
   .POD의 상태(POD의 이름, 볼륨(저장소),...)를 유지해 주는 컨트롤러
   .ReplicationController나 ReplicaSet들은 수행해 POD이름 뒷쪽에 hash값이 들어감, 수량의 변경으로 추가/변경시 hash값이 변경되어 POD이름이 변경됨
   .scale in/out시 순서데로 pod의 번호를 확장/축소
-  .예를들어 1번 POD가 삭제되면 다른 호스트에 1번 POD를 다시 만듬
+  .예를들어 1번 POD가 삭제되면 다른 호스트에 1번 POD를 다시 만듬, 즉 이름이 유지않됨
+  .ReplicaSet: 동일한 상태가 필요없는 주로 WWW서버들, StatefulSet은 상태유지가 필요한, 대부분 DB서버들 지정
 
 
 -실습:
@@ -1235,7 +1309,7 @@ K8s Controller: Job(Scheduled, Batch)
   .스케쥴러란?
     -자원 스케쥴: 모든 시스템의 자원의 사용유무를 보고받아 사용현황을 알고있고 중앙 데이타베이스에 유지 ex)GPU
     -시간 스케쥴: 지정된 시간에 수행, 지정된 시간만큼만 수행
-    -프로그램 스케쥴: 여러대 호스트 중 사용하고자 하는 프로그램이 깔려져 있는 호스트에서 수행
+    -소프트웨어어 스케쥴: 여러대 호스트 중 사용하고자 하는 소프트웨어 프로그램이 깔려져 있는 호스트에서 수행
     -라이센스 스케쥴: 여러대 호스트에 프로그램들이 깔려있지만, 사용할 수 있는 숫자만큼만 수행
   .유명한 스케쥴러
     -Super Computing: IBM LSF, Slurm
@@ -1634,10 +1708,12 @@ kubectl describe pods annotations-demo-pod
 =====================================================================================
 K8s Application Deployment 종합: Canary Deployment
 =====================================================================================
--K8s POD 배포방법 3가지:
+-K8s POD 배포방법 5가지:
+  .ReCreate
   .Blue/Green Updata
-  .Rolling Update
+  .Rampted(Rolling) Update
   .Canary Update
+  .A/B Test
 
 -개념(Canary Update):
   .기본의 버젼을 유지한 채로 일부 버젼만 신규 버전으로 올려서 신규 버전에 버그나 이상이 없는 확인하면서 배포해 나가는 방법
@@ -1928,7 +2004,7 @@ spec:
 ---
 
 
-5) StorageClass->PVC-PV-NFS AutoMount
+5) PVC-StorageClased PV-NFS AutoMount
 
 nano nginx-service-LoadBalancer-volume-mount.yaml
 ---
@@ -1997,3 +2073,6 @@ NAME                                       CAPACITY   ACCESS MODES   RECLAIM POL
 pvc-9818ecbc-bab8-4bc3-9f93-81e984a02ec4   1Gi        RWX            Delete           Bound    default/default   default                 39d
 
 
+=====================================================================================
+K8s Volume Mount
+=====================================================================================
