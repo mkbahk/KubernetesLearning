@@ -100,6 +100,25 @@ deployment.apps/controller created
 root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster#
 
 
+Every 2.0s: kubectl get pods -A                                                                                                 srv161: Mon Jul  4 07:58:43 2022
+
+NAMESPACE        NAME                                       READY   STATUS    RESTARTS   AGE
+kube-system      calico-kube-controllers-69496d8b75-txbqr   1/1     Running   0          36m
+kube-system      calico-node-82pmv                          0/1     Running   0          36m
+kube-system      calico-node-97pqd                          0/1     Running   0          36m
+kube-system      coredns-74ff55c5b-gpxj7                    1/1     Running   0          44m
+kube-system      coredns-74ff55c5b-kslsh                    1/1     Running   0          44m
+kube-system      etcd-srv161                                1/1     Running   0          44m
+kube-system      kube-apiserver-srv161                      1/1     Running   0          44m
+kube-system      kube-controller-manager-srv161             1/1     Running   0          44m
+kube-system      kube-proxy-bg8fb                           1/1     Running   0          42m
+kube-system      kube-proxy-bghn7                           1/1     Running   0          44m
+kube-system      kube-scheduler-srv161                      1/1     Running   0          44m
+metallb-system   controller-6b78bff7d9-4wqxt                1/1     Running   0          34s
+metallb-system   speaker-7jrgw                              1/1     Running   0          34s
+metallb-system   speaker-wpdbr                              1/1     Running   0          34s
+
+
 root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster# bash metallb-03-nginx-test-install.sh
 deployment.apps/nginx-metallb-test created
 service/nginx-metallb-test exposed
@@ -108,167 +127,55 @@ kubernetes           ClusterIP      10.96.0.1        <none>          443/TCP    
 nginx-metallb-test   LoadBalancer   10.105.171.229   218.145.56.80   80:31630/TCP   0s
 root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster#
 
-
+//
+//bash completion install
+//
 kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
 kubeadm completion bash | sudo tee /etc/bash_completion.d/kubeadm > /dev/null
 
-
-root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster# kubectl apply -f  dashboard-00-role-binding-mkbahk-20210427.yaml
-clusterrolebinding.rbac.authorization.k8s.io/kubernetes-dashboard2 created
-
-
-root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster# kubectl apply -f dashboard-01-2.3.1-recommended-mkbahk-20210623.yaml
-namespace/kubernetes-dashboard created
-serviceaccount/kubernetes-dashboard created
-service/kubernetes-dashboard created
-secret/kubernetes-dashboard-certs created
-secret/kubernetes-dashboard-csrf created
-secret/kubernetes-dashboard-key-holder created
-configmap/kubernetes-dashboard-settings created
-role.rbac.authorization.k8s.io/kubernetes-dashboard created
-clusterrole.rbac.authorization.k8s.io/kubernetes-dashboard created
-rolebinding.rbac.authorization.k8s.io/kubernetes-dashboard created
-clusterrolebinding.rbac.authorization.k8s.io/kubernetes-dashboard created
-deployment.apps/kubernetes-dashboard created
-service/dashboard-metrics-scraper created
-deployment.apps/dashboard-metrics-scraper created
-
-
-root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster# kubectl apply -f dashboard-02-metric-server-components-cf-changed-mkbahk-202100427.yaml
-clusterrole.rbac.authorization.k8s.io/system:aggregated-metrics-reader created
-clusterrolebinding.rbac.authorization.k8s.io/metrics-server:system:auth-delegator created
-rolebinding.rbac.authorization.k8s.io/metrics-server-auth-reader created
-apiservice.apiregistration.k8s.io/v1beta1.metrics.k8s.io created
-serviceaccount/metrics-server created
-deployment.apps/metrics-server created
-service/metrics-server created
-clusterrole.rbac.authorization.k8s.io/system:metrics-server created
-clusterrolebinding.rbac.authorization.k8s.io/system:metrics-server created
-root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster#
-
-root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster# kubectl -n kubernetes-dashboard get secret
-NAME                               TYPE                                  DATA   AGE
-default-token-fv96z                kubernetes.io/service-account-token   3      47s
-kubernetes-dashboard-certs         Opaque                                0      47s
-kubernetes-dashboard-csrf          Opaque                                1      47s
-kubernetes-dashboard-key-holder    Opaque                                2      47s
-kubernetes-dashboard-token-rtb7z   kubernetes.io/service-account-token   3      47s
-root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster#
+//
+//NFS Dynamic Provisioning Install
+//
+root@srv161:~/KubernetesLearning/SRV161-SRV162-Cluster/nfs-auto-prov# kubectl apply -f nfs-00-rbac.yaml
+serviceaccount/nfs-client-provisioner created
+clusterrole.rbac.authorization.k8s.io/nfs-client-provisioner-runner created
+clusterrolebinding.rbac.authorization.k8s.io/run-nfs-client-provisioner created
+role.rbac.authorization.k8s.io/leader-locking-nfs-client-provisioner created
+rolebinding.rbac.authorization.k8s.io/leader-locking-nfs-client-provisioner created
+root@srv161:~/KubernetesLearning/SRV161-SRV162-Cluster/nfs-auto-prov# kubectl apply -f nfs-01-storageclass-default.yaml
+storageclass.storage.k8s.io/sc-default created
+storageclass.storage.k8s.io/sc-fast created
+storageclass.storage.k8s.io/sc-bigdata created
+storageclass.storage.k8s.io/sc-backup created
+root@srv161:~/KubernetesLearning/SRV161-SRV162-Cluster/nfs-auto-prov# kubectl apply -f nfs-02-nfs-ext-provisioner-deployment.yaml
+deployment.apps/nfs-client-provisioner created
+root@srv161:~/KubernetesLearning/SRV161-SRV162-Cluster/nfs-auto-prov# kubectl apply -f nfs-03-test-pvc-claim-default.yaml
+persistentvolumeclaim/pvc-default created
+persistentvolumeclaim/pvc-fast created
+persistentvolumeclaim/pvc-backup created
+persistentvolumeclaim/pvc-bigdata created
 
 
- kubectl -n kubernetes-dashboard get secret kubernetes-dashboard-token-rtb7z \-o jsonpath='{.data.token}' | base64 --decode
+root@srv161:~/KubernetesLearning/SRV161-SRV162-Cluster/nfs-auto-prov# kubectl apply -f nfs-04-test-pod-default.yaml
+pod/test-nfs-pvc-pod-default created
 
-root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster#  kubectl -n kubernetes-dashboard get secret kubernetes-dashboard-token-rtb7z \-o jsonpath='{.data.token}' | base64 --decode
-eyJhbGciOiJSUzI1NiIsImtpZCI6ImRDYXlyMV9ZT1pabW5Xakd0RGN4VnRuWU9xSnB3dlBRTGFpMWo2Y1NMRVkifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZC10b2tlbi1ydGI3eiIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjcxYjk2ZDU3LTc1OTYtNDA2NS1hZWIwLTFhMDM3ZmVmZjM5NCIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlcm5ldGVzLWRhc2hib2FyZDprdWJlcm5ldGVzLWRhc2hib2FyZCJ9.A8y_IcOY0EIJbUBnJD5lsj1SpH84j9ov9xSswxFrlnJP_xCOqtvkBiuluz6ZsKYJIzuhLQS5Go1Dj8Kyoyb5C3r7rWFBc6yZq7syQZ1oNo6RiHQCsexZCHhc3lqDNSkG_PJBB6QP3maBbQT8mzgmrACn722vcKf8MHwvxw37SftAdrial5pIOJtZFqvcsv3zoXH4KKFSGE-LxuXxrcVVBq1vO7iGQBTOEgpvJ-xJ9bpgeTYy2trzvGzltB0WaJyhPVwd3VXbTJzmnp_o2CI0cFTp5n9h33XOseMTKykQyIf8Qg-UuKKZubVABUMhVGxFMBmb3ABXinUoYnTLdpb7jA
+Every 2.0s: kubectl get pods -A                                                                                                 srv161: Mon Jul  4 08:14:59 2022
 
-
-
-root@srv161:~# grep 'client-certificate-data' ~/.kube/config | head -n 1 | awk '{print $2}' | base64 -d >> client.crt
-root@srv161:~# grep 'client-key-data' ~/.kube/config | head -n 1 | awk '{print $2}' | base64 -d >> client.key
-root@srv161:~# openssl pkcs12 -export -clcerts -inkey client.key -in client.crt -out client.p12 -name "srv161"
-Enter Export Password:
-Verifying - Enter Export Password:
-root@srv161:~#
-
-
-ls -al
--rw-r--r--   1 root root      1127  6월 27 15:29 client.crt
--rw-r--r--   1 root root      1679  6월 27 15:29 client.key
--rw-------   1 root root      2450  6월 27 15:30 client.p12
-
-kubectl edit svc kubernetes-dashboard -n kubernetes-dashboard
-
-
-~
-~
-~
-~
-~
-"/tmp/kubectl-edit-yr0fn.yaml" 31L, 1057C                                                                                                                         1,1           All
-# Please edit the object below. Lines beginning with a '#' will be ignored,
-# and an empty file will abort the edit. If an error occurs while saving this file will be
-# reopened with the relevant failures.
-#
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"k8s-app":"kubernetes-dashboard"},"name":"kubernetes-dashboard","namespace":"kubernetes-dashboard"},"spec":{"ports":[{"port":443,"targetPort":8443}],"selector":{"k8s-app":"kubernetes-dashboard"}}}
-  creationTimestamp: "2022-06-27T06:25:50Z"
-  labels:
-    k8s-app: kubernetes-dashboard
-  name: kubernetes-dashboard
-  namespace: kubernetes-dashboard
-  resourceVersion: "2292"
-  uid: 2c72b0eb-f4df-45ea-ae45-75048e0cdb2a
-spec:
-  clusterIP: 10.104.12.13
-  clusterIPs:
-  - 10.104.12.13
-  ports:
-  - port: 443
-    protocol: TCP
-    targetPort: 8443
-  selector:
-    k8s-app: kubernetes-dashboard
-  sessionAffinity: None
-  type: ClusterIP -> LoadBalancer
-status:
-  loadBalancer: {}
-~
-:wq!
-
-root@srv161:~# kubectl get svc -n kubernetes-dashboard
-NAME                        TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)         AGE
-dashboard-metrics-scraper   ClusterIP      10.107.20.61   <none>          8000/TCP        9m19s
-kubernetes-dashboard        LoadBalancer   10.104.12.13   218.145.56.81   443:32767/TCP   9m19s
-root@srv161:~#
-
-//Brower에서 Kubernetes Dashboard 접근
-https://218.145.56.81/
-
-//위 접속이 않되어서 
-
-root@srv161:~# kubectl get pods --all-namespaces
-NAMESPACE              NAME                                         READY   STATUS             RESTARTS   AGE
-default                nginx-metallb-test-97874c49c-drrtp           1/1     Running            0          27m
-kube-system            calico-kube-controllers-69496d8b75-dkl9t     1/1     Running            0          34m
-kube-system            calico-node-bvnw6                            0/1     Running            0          34m
-kube-system            calico-node-xztkm                            0/1     Running            0          34m
-kube-system            coredns-74ff55c5b-f678x                      1/1     Running            0          37m
-kube-system            coredns-74ff55c5b-nl7br                      1/1     Running            0          37m
-kube-system            etcd-srv161                                  1/1     Running            0          37m
-kube-system            kube-apiserver-srv161                        1/1     Running            0          37m
-kube-system            kube-controller-manager-srv161               1/1     Running            0          37m
-kube-system            kube-proxy-5fv7q                             1/1     Running            0          36m
-kube-system            kube-proxy-5xn7x                             1/1     Running            0          37m
-kube-system            kube-scheduler-srv161                        1/1     Running            0          37m
-kube-system            metrics-server-8947d5698-xkzrd               1/1     Running            0          19m
-kubernetes-dashboard   dashboard-metrics-scraper-79c5968bdc-z2dxg   1/1     Running            0          19m
-kubernetes-dashboard   kubernetes-dashboard-658485d5c7-djwms        1/1     Running            0          19m
-metallb-system         controller-6b78bff7d9-cchrj                  1/1     Running            0          29m
-metallb-system         speaker-hsz7k                                0/1     CrashLoopBackOff   10         29m
-metallb-system         speaker-qqhnv                                0/1     CrashLoopBackOff   10         29m
-root@srv161:~# kubectl logs speaker-qqhnv -n metallb-system
-{"branch":"HEAD","caller":"main.go:81","commit":"v0.10.2","goversion":"gc / go1.16.5 / amd64","msg":"MetalLB speaker starting version 0.10.2 (commit v0.10.2, branch HEAD)","ts":"2022-06-27T06:42:38.665432389Z","version":"0.10.2"}
-{"caller":"memberlist.go:145","component":"Memberlist","msg":"[DEBUG] memberlist: Got bind error: Failed to start TCP listener on \"218.145.56.73\" port 7946: listen tcp 218.145.56.73:7946: bind: address already in use","ts":"2022-06-27T06:42:38.665934373Z"}
-{"caller":"speakerlist.go:96","error":"Could not set up network transport: failed to obtain an address: Failed to start TCP listener on \"218.145.56.73\" port 7946: listen tcp 218.145.56.73:7946: bind: address already in use","msg":"failed to create memberlist","op":"startup","ts":"2022-06-27T06:42:38.665968741Z"}
-root@srv161:~# netstat -naplt | grep 7946
-tcp        0      0 218.145.56.73:57374     218.145.56.74:7946      TIME_WAIT   -
-tcp        0      0 218.145.56.73:57440     218.145.56.74:7946      TIME_WAIT   -
-tcp        0      0 218.145.56.73:57692     218.145.56.74:7946      TIME_WAIT   -
-tcp        0      0 218.145.56.73:57642     218.145.56.74:7946      TIME_WAIT   -
-tcp6       0      0 :::7946                 :::*                    LISTEN      3124/dockerd
-tcp6       0      0 218.145.56.73:7946      218.145.56.74:34438     TIME_WAIT   -
-tcp6       0      0 218.145.56.73:7946      218.145.56.74:34468     TIME_WAIT   -
-
-//즉 Docker Swarm 사용 중이라 3946->7947로 변경함
-
-
-
-
-
-
-
+NAMESPACE        NAME                                       READY   STATUS      RESTARTS   AGE
+default          nfs-client-provisioner-759bc7f67b-sl8wv    1/1     Running     0          9m13s
+default          test-nfs-pvc-pod-default                   0/1     Completed   0          7m58s
+kube-system      calico-kube-controllers-69496d8b75-txbqr   1/1     Running     0          53m
+kube-system      calico-node-82pmv                          0/1     Running     0          53m
+kube-system      calico-node-97pqd                          0/1     Running     0          53m
+kube-system      coredns-74ff55c5b-gpxj7                    1/1     Running     0          60m
+kube-system      coredns-74ff55c5b-kslsh                    1/1     Running     0          60m
+kube-system      etcd-srv161                                1/1     Running     0          60m
+kube-system      kube-apiserver-srv161                      1/1     Running     0          60m
+kube-system      kube-controller-manager-srv161             1/1     Running     0          60m
+kube-system      kube-proxy-bg8fb                           1/1     Running     0          58m
+kube-system      kube-proxy-bghn7                           1/1     Running     0          60m
+kube-system      kube-scheduler-srv161                      1/1     Running     0          60m
+metallb-system   controller-6b78bff7d9-4wqxt                1/1     Running     0          16m
+metallb-system   speaker-7jrgw                              1/1     Running     0          16m
+metallb-system   speaker-wpdbr                              1/1     Running     0          16m
 

@@ -1,0 +1,388 @@
+//pod641에서
+
+kubeadm init --pod-network-cidr=172.28.0.0/16 --apiserver-advertise-address=218.145.56.75
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM# kubeadm init --pod-network-cidr=172.28.0.0/16 --apiserver-advertise-address=218.145.56.75
+I0627 17:59:10.879211  199332 version.go:251] remote version is much newer: v1.24.2; falling back to: stable-1.20
+[init] Using Kubernetes version: v1.20.15
+[preflight] Running pre-flight checks
+[preflight] Pulling images required for setting up a Kubernetes cluster
+[preflight] This might take a minute or two, depending on the speed of your internet connection
+[preflight] You can also perform this action in beforehand using 'kubeadm config images pull'
+[certs] Using certificateDir folder "/etc/kubernetes/pki"
+[certs] Generating "ca" certificate and key
+[certs] Generating "apiserver" certificate and key
+[certs] apiserver serving cert is signed for DNS names [kubernetes kubernetes.default kubernetes.default.svc kubernetes.default.svc.cluster.local pod641] and IPs [10.96.0.1 218.145.56.75]
+[certs] Generating "apiserver-kubelet-client" certificate and key
+[certs] Generating "front-proxy-ca" certificate and key
+[certs] Generating "front-proxy-client" certificate and key
+[certs] Generating "etcd/ca" certificate and key
+[certs] Generating "etcd/server" certificate and key
+[certs] etcd/server serving cert is signed for DNS names [localhost pod641] and IPs [218.145.56.75 127.0.0.1 ::1]
+[certs] Generating "etcd/peer" certificate and key
+[certs] etcd/peer serving cert is signed for DNS names [localhost pod641] and IPs [218.145.56.75 127.0.0.1 ::1]
+[certs] Generating "etcd/healthcheck-client" certificate and key
+[certs] Generating "apiserver-etcd-client" certificate and key
+[certs] Generating "sa" key and public key
+[kubeconfig] Using kubeconfig folder "/etc/kubernetes"
+[kubeconfig] Writing "admin.conf" kubeconfig file
+[kubeconfig] Writing "kubelet.conf" kubeconfig file
+[kubeconfig] Writing "controller-manager.conf" kubeconfig file
+[kubeconfig] Writing "scheduler.conf" kubeconfig file
+[kubelet-start] Writing kubelet environment file with flags to file "/var/lib/kubelet/kubeadm-flags.env"
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[kubelet-start] Starting the kubelet
+[control-plane] Using manifest folder "/etc/kubernetes/manifests"
+[control-plane] Creating static Pod manifest for "kube-apiserver"
+[control-plane] Creating static Pod manifest for "kube-controller-manager"
+[control-plane] Creating static Pod manifest for "kube-scheduler"
+[etcd] Creating static Pod manifest for local etcd in "/etc/kubernetes/manifests"
+[wait-control-plane] Waiting for the kubelet to boot up the control plane as static Pods from directory "/etc/kubernetes/manifests". This can take up to 4m0s
+[apiclient] All control plane components are healthy after 13.001290 seconds
+[upload-config] Storing the configuration used in ConfigMap "kubeadm-config" in the "kube-system" Namespace
+[kubelet] Creating a ConfigMap "kubelet-config-1.20" in namespace kube-system with the configuration for the kubelets in the cluster
+[upload-certs] Skipping phase. Please see --upload-certs
+[mark-control-plane] Marking the node pod641 as control-plane by adding the labels "node-role.kubernetes.io/master=''" and "node-role.kubernetes.io/control-plane='' (deprecated)"
+[mark-control-plane] Marking the node pod641 as control-plane by adding the taints [node-role.kubernetes.io/master:NoSchedule]
+[bootstrap-token] Using token: xz8wc7.ib5gobnxn57q3h3z
+[bootstrap-token] Configuring bootstrap tokens, cluster-info ConfigMap, RBAC Roles
+[bootstrap-token] configured RBAC rules to allow Node Bootstrap tokens to get nodes
+[bootstrap-token] configured RBAC rules to allow Node Bootstrap tokens to post CSRs in order for nodes to get long term certificate credentials
+[bootstrap-token] configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Node Bootstrap Token
+[bootstrap-token] configured RBAC rules to allow certificate rotation for all node client certificates in the cluster
+[bootstrap-token] Creating the "cluster-info" ConfigMap in the "kube-public" namespace
+[kubelet-finalize] Updating "/etc/kubernetes/kubelet.conf" to point to a rotatable kubelet client certificate and key
+[addons] Applied essential addon: CoreDNS
+[addons] Applied essential addon: kube-proxy
+
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Alternatively, if you are the root user, you can run:
+
+  export KUBECONFIG=/etc/kubernetes/admin.conf
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 218.145.56.75:6443 --token xz8wc7.ib5gobnxn57q3h3z \
+    --discovery-token-ca-cert-hash sha256:49050ae8859de69fc870b79bce75d85ace84efe09bc362c969940cf17a3f975a
+
+
+
+//POD642에서
+root@pod642:~# kubeadm join 218.145.56.75:6443 --token xz8wc7.ib5gobnxn57q3h3z \
+>     --discovery-token-ca-cert-hash sha256:49050ae8859de69fc870b79bce75d85ace84efe09bc362c969940cf17a3f975a
+[preflight] Running pre-flight checks
+
+
+
+[preflight] Reading configuration from the cluster...
+[preflight] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[kubelet-start] Writing kubelet environment file with flags to file "/var/lib/kubelet/kubeadm-flags.env"
+[kubelet-start] Starting the kubelet
+[kubelet-start] Waiting for the kubelet to perform the TLS Bootstrap...
+
+This node has joined the cluster:
+* Certificate signing request was sent to apiserver and a response was received.
+* The Kubelet was informed of the new secure connection details.
+
+Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
+
+
+//POD641에서
+NAME     STATUS   ROLES                  AGE     VERSION
+pod641   Ready    control-plane,master   4m13s   v1.20.0
+pod642   Ready    <none>                 101s    v1.20.0
+root@pod641:~#
+
+
+//calico network-plugin을 설치하지 않아 coredns pod가 정상아님
+root@pod641:~# kubectl get pods -A
+NAMESPACE     NAME                             READY   STATUS              RESTARTS   AGE
+kube-system   coredns-74ff55c5b-f8bpp          0/1     ContainerCreating   0          4m13s
+kube-system   coredns-74ff55c5b-zl2s4          0/1     ContainerCreating   0          4m13s
+kube-system   etcd-pod641                      1/1     Running             0          4m20s
+kube-system   kube-apiserver-pod641            1/1     Running             0          4m20s
+kube-system   kube-controller-manager-pod641   1/1     Running             0          4m20s
+kube-system   kube-proxy-7864r                 1/1     Running             0          118s
+kube-system   kube-proxy-rmzr5                 1/1     Running             0          4m14s
+kube-system   kube-scheduler-pod641            1/1     Running             0          4m20s
+root@pod641:~#
+
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM# kubectl apply -f calico-mkbahk-20210320.yaml
+configmap/calico-config created
+customresourcedefinition.apiextensions.k8s.io/bgpconfigurations.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/bgppeers.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/blockaffinities.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/clusterinformations.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/felixconfigurations.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/globalnetworkpolicies.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/globalnetworksets.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/hostendpoints.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/ipamblocks.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/ipamconfigs.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/ipamhandles.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/ippools.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/kubecontrollersconfigurations.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/networkpolicies.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/networksets.crd.projectcalico.org created
+clusterrole.rbac.authorization.k8s.io/calico-kube-controllers created
+clusterrolebinding.rbac.authorization.k8s.io/calico-kube-controllers created
+clusterrole.rbac.authorization.k8s.io/calico-node created
+clusterrolebinding.rbac.authorization.k8s.io/calico-node created
+daemonset.apps/calico-node created
+serviceaccount/calico-node created
+deployment.apps/calico-kube-controllers created
+serviceaccount/calico-kube-controllers created
+poddisruptionbudget.policy/calico-kube-controllers created
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM#
+
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM# kubectl get pods -A -o wide
+NAMESPACE     NAME                                       READY   STATUS    RESTARTS   AGE     IP               NODE     NOMINATED NODE   READINESS GATES
+kube-system   calico-kube-controllers-69496d8b75-qhfzr   1/1     Running   0          64s     172.28.235.193   pod642   <none>           <none>
+kube-system   calico-node-5j4f8                          1/1     Running   0          64s     218.145.56.76    pod642   <none>           <none>
+kube-system   calico-node-kcft9                          1/1     Running   0          64s     218.145.56.75    pod641   <none>           <none>
+kube-system   coredns-74ff55c5b-f8bpp                    1/1     Running   0          6m34s   172.28.17.66     pod641   <none>           <none>
+kube-system   coredns-74ff55c5b-zl2s4                    1/1     Running   0          6m34s   172.28.17.65     pod641   <none>           <none>
+kube-system   etcd-pod641                                1/1     Running   0          6m41s   218.145.56.75    pod641   <none>           <none>
+kube-system   kube-apiserver-pod641                      1/1     Running   0          6m41s   218.145.56.75    pod641   <none>           <none>
+kube-system   kube-controller-manager-pod641             1/1     Running   0          6m41s   218.145.56.75    pod641   <none>           <none>
+kube-system   kube-proxy-7864r                           1/1     Running   0          4m19s   218.145.56.76    pod642   <none>           <none>
+kube-system   kube-proxy-rmzr5                           1/1     Running   0          6m35s   218.145.56.75    pod641   <none>           <none>
+kube-system   kube-scheduler-pod641                      1/1     Running   0          6m41s   218.145.56.75    pod641   <none>           <none>
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM#
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM# kubectl get nodes -o wide
+NAME     STATUS   ROLES                  AGE     VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION       CONTAINER-RUNTIME
+pod641   Ready    control-plane,master   7m16s   v1.20.0   218.145.56.75   <none>        Ubuntu 18.04.6 LTS   4.15.0-175-generic   docker://19.3.8
+pod642   Ready    <none>                 4m44s   v1.20.0   218.145.56.76   <none>        Ubuntu 18.04.5 LTS   4.15.0-187-generic   docker://19.3.8
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM#
+
+
+//K8s Dashboard 설치
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM# kubectl apply -f dashboard-00-role-binding-mkbahk-20210427.yaml
+clusterrolebinding.rbac.authorization.k8s.io/kubernetes-dashboard2 created
+
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM# kubectl apply -f dashboard-01-2.3.1-recommended-mkbahk-20210623.yaml
+namespace/kubernetes-dashboard created
+serviceaccount/kubernetes-dashboard created
+service/kubernetes-dashboard created
+secret/kubernetes-dashboard-certs created
+secret/kubernetes-dashboard-csrf created
+secret/kubernetes-dashboard-key-holder created
+configmap/kubernetes-dashboard-settings created
+role.rbac.authorization.k8s.io/kubernetes-dashboard created
+clusterrole.rbac.authorization.k8s.io/kubernetes-dashboard created
+rolebinding.rbac.authorization.k8s.io/kubernetes-dashboard created
+clusterrolebinding.rbac.authorization.k8s.io/kubernetes-dashboard created
+deployment.apps/kubernetes-dashboard created
+service/dashboard-metrics-scraper created
+deployment.apps/dashboard-metrics-scraper created
+
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM# kubectl apply -f dashboard-02-metric-server-components-cf-changed-mkbahk-202100427.yaml
+clusterrole.rbac.authorization.k8s.io/system:aggregated-metrics-reader created
+clusterrolebinding.rbac.authorization.k8s.io/metrics-server:system:auth-delegator created
+rolebinding.rbac.authorization.k8s.io/metrics-server-auth-reader created
+apiservice.apiregistration.k8s.io/v1beta1.metrics.k8s.io created
+serviceaccount/metrics-server created
+deployment.apps/metrics-server created
+service/metrics-server created
+clusterrole.rbac.authorization.k8s.io/system:metrics-server created
+clusterrolebinding.rbac.authorization.k8s.io/system:metrics-server created
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM#
+
+//Metallb LoadBalancer 설치
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM# kubectl apply -f  metallb-00-namespace.yaml
+namespace/metallb-system created
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM# kubectl apply -f metallb-01-ConfigMap.yaml
+configmap/config created
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM# kubectl apply -f metallb-02-install.yaml
+podsecuritypolicy.policy/controller created
+podsecuritypolicy.policy/speaker created
+serviceaccount/controller created
+serviceaccount/speaker created
+clusterrole.rbac.authorization.k8s.io/metallb-system:controller created
+clusterrole.rbac.authorization.k8s.io/metallb-system:speaker created
+role.rbac.authorization.k8s.io/config-watcher created
+role.rbac.authorization.k8s.io/pod-lister created
+role.rbac.authorization.k8s.io/controller created
+clusterrolebinding.rbac.authorization.k8s.io/metallb-system:controller created
+clusterrolebinding.rbac.authorization.k8s.io/metallb-system:speaker created
+rolebinding.rbac.authorization.k8s.io/config-watcher created
+rolebinding.rbac.authorization.k8s.io/pod-lister created
+rolebinding.rbac.authorization.k8s.io/controller created
+daemonset.apps/speaker created
+deployment.apps/controller created
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM#
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM# kubectl get pods -A
+NAMESPACE              NAME                                         READY   STATUS    RESTARTS   AGE
+kube-system            calico-kube-controllers-69496d8b75-qhfzr     1/1     Running   0          5m54s
+kube-system            calico-node-5j4f8                            1/1     Running   0          5m54s
+kube-system            calico-node-kcft9                            1/1     Running   0          5m54s
+kube-system            coredns-74ff55c5b-f8bpp                      1/1     Running   0          11m
+kube-system            coredns-74ff55c5b-zl2s4                      1/1     Running   0          11m
+kube-system            etcd-pod641                                  1/1     Running   0          11m
+kube-system            kube-apiserver-pod641                        1/1     Running   0          11m
+kube-system            kube-controller-manager-pod641               1/1     Running   0          11m
+kube-system            kube-proxy-7864r                             1/1     Running   0          9m9s
+kube-system            kube-proxy-rmzr5                             1/1     Running   0          11m
+kube-system            kube-scheduler-pod641                        1/1     Running   0          11m
+kube-system            metrics-server-8947d5698-jb8dj               1/1     Running   0          3m17s
+kubernetes-dashboard   dashboard-metrics-scraper-79c5968bdc-7znnq   1/1     Running   0          3m28s
+kubernetes-dashboard   kubernetes-dashboard-658485d5c7-zr8pc        1/1     Running   0          3m28s
+metallb-system         controller-6b78bff7d9-nh94k                  1/1     Running   0          73s
+metallb-system         speaker-kwpb9                                1/1     Running   0          73s
+metallb-system         speaker-vhvgc                                1/1     Running   0          73s
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM#
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM# kubectl get svc -A
+NAMESPACE              NAME                        TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)                  AGE
+default                kubernetes                  ClusterIP   10.96.0.1      <none>        443/TCP                  12m
+kube-system            kube-dns                    ClusterIP   10.96.0.10     <none>        53/UDP,53/TCP,9153/TCP   12m
+kube-system            metrics-server              ClusterIP   10.102.44.88   <none>        443/TCP                  3m41s
+kubernetes-dashboard   dashboard-metrics-scraper   ClusterIP   10.106.56.18   <none>        8000/TCP                 3m52s
+kubernetes-dashboard   kubernetes-dashboard        ClusterIP   10.104.3.216   <none>        443/TCP                  3m52s
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM#
+
+
+kubect edit svc kubernetes-dashboard -n kubernetes-dashboard 
+~
+"/tmp/kubectl-edit-6pr7n.yaml" 31L, 1057C                                                                                                                                                                                                                                         1,1           All
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"k8s-app":"kubernetes-dashboard"},"name":"kubernetes-dashboard","namespace":"kubernetes-dashboard"},"spec":{"ports":[{"port":443,"targetPort":8443}],"selector":{"k8s-app":"kubernetes-dashboard"}}}
+  creationTimestamp: "2022-06-27T09:07:39Z"
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+  resourceVersion: "1337"
+  uid: 46e1135d-72f7-4c6e-a76f-ed38e7613088
+spec:
+  clusterIP: 10.104.3.216
+  clusterIPs:
+  - 10.104.3.216
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    k8s-app: kubernetes-dashboard
+  sessionAffinity: None
+  type: ClusterIP -> LoadBalancer
+status:
+  loadBalancer: {}
+~
+:wq!
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM# kubectl get svc -A
+NAMESPACE              NAME                        TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)                  AGE
+default                kubernetes                  ClusterIP      10.96.0.1      <none>          443/TCP                  13m
+kube-system            kube-dns                    ClusterIP      10.96.0.10     <none>          53/UDP,53/TCP,9153/TCP   13m
+kube-system            metrics-server              ClusterIP      10.102.44.88   <none>          443/TCP                  5m24s
+kubernetes-dashboard   dashboard-metrics-scraper   ClusterIP      10.106.56.18   <none>          8000/TCP                 5m35s
+kubernetes-dashboard   kubernetes-dashboard        LoadBalancer   10.104.3.216   218.145.56.84   443:32178/TCP            5m35s
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM#
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM#  kubectl -n kubernetes-dashboard get secret
+NAME                               TYPE                                  DATA   AGE
+default-token-jc4mt                kubernetes.io/service-account-token   3      6m32s
+kubernetes-dashboard-certs         Opaque                                0      6m32s
+kubernetes-dashboard-csrf          Opaque                                1      6m32s
+kubernetes-dashboard-key-holder    Opaque                                2      6m32s
+kubernetes-dashboard-token-gmtt8   kubernetes.io/service-account-token   3      6m32s
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM#
+
+kubectl -n kubernetes-dashboard get secret kubernetes-dashboard-token-gmtt8 \-o jsonpath='{.data.token}' | base64 --decode
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM# kubectl -n kubernetes-dashboard get secret kubernetes-dashboard-token-gmtt8 \-o jsonpath='{.data.token}' | base64 --decode
+eyJhbGciOiJSUzI1NiIsImtpZCI6IkxFYk9pTGxNb2hxQm93U2paRjRPbEgzcUNJYkQ1Q3prQUo5d3Z6NFFYSjQifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZC10b2tlbi1nbXR0OCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjVkNGRlODViLWU5YWQtNDVjZi04NTJkLWMzNTI5MzY4MmNhZiIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlcm5ldGVzLWRhc2hib2FyZDprdWJlcm5ldGVzLWRhc2hib2FyZCJ9.mX4kBR5yC3Tejlugd0fEMO2HWBlDJgiFo8aOQPHxrx6jLaY1eJSEY-sWeeshg3DK82RGfFMHqz3gwVWdNEhqhfnBtMc6rfYx0Sf43WRPBvMTFAJ8Dg96Y6SbAS7dnddQsrs9_5uPeHdTbzzupFJBbe2S-gBXUC7rE9Xh_a1UT30Y_ZEvpSqIU66nKPSup3xZZyqRWAvIFOdIUVwMuspM9DB2gaRYrBX9En_DM7XRYlPStpkyxUIKjwkQKtOLOBYdq0BwusSdPLuPF5Uo5q17REfh5mbp-gxceyDX5aNkk4WNMEgmSEHjpva3KLXHUrwusePQW5aLV8MXvKdKcc2n2Aroot@pod641:~/KubernetesLearning/IPU-POD641-SingleM#
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM#
+
+root@pod641:~# grep 'client-certificate-data' ~/.kube/config | head -n 1 | awk '{print $2}' | base64 -d >> client.crt
+root@pod641:~# grep 'client-key-data' ~/.kube/config | head -n 1 | awk '{print $2}' | base64 -d >> client.key
+root@pod641:~# openssl pkcs12 -export -clcerts -inkey client.key -in client.crt -out client.p12 -name "pod641"
+Enter Export Password:
+Verifying - Enter Export Password:
+
+
+root@pod641:~# kubectl get svc --all-namespaces
+NAMESPACE              NAME                        TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)                  AGE
+default                kubernetes                  ClusterIP      10.96.0.1      <none>          443/TCP                  22m
+kube-system            kube-dns                    ClusterIP      10.96.0.10     <none>          53/UDP,53/TCP,9153/TCP   22m
+kube-system            metrics-server              ClusterIP      10.102.44.88   <none>          443/TCP                  13m
+kubernetes-dashboard   dashboard-metrics-scraper   ClusterIP      10.106.56.18   <none>          8000/TCP                 14m
+kubernetes-dashboard   kubernetes-dashboard        LoadBalancer   10.104.3.216   218.145.56.84   443:32178/TCP            14m
+root@pod641:~#
+
+//NFS Dynamic Provisioning
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM/nfs-auto-prov# ll
+total 36
+drwxr-xr-x 2 root root 4096 Apr  1 10:47 ./
+drwxr-xr-x 3 root root 4096 Jun 27 17:55 ../
+-rw-r--r-- 1 root root 1900 Nov 21  2021 nfs-00-rbac.yaml
+-rw-r--r-- 1 root root 1272 Jun 21 07:21 nfs-01-storageclass-default.yaml
+-rw-r--r-- 1 root root 1074 May 11 16:39 nfs-02-nfs-ext-provisioner-deployment.yaml
+-rw-r--r-- 1 root root  748 Jun 21 07:27 nfs-03-test-pvc-claim-default.yaml
+-rw-r--r-- 1 root root  464 Nov 21  2021 nfs-04-test-pod-default-blank.yaml
+-rw-r--r-- 1 root root  411 Nov 21  2021 nfs-04-test-pod-default-nodeClaimName.yaml
+-rw-r--r-- 1 root root  430 Nov 28  2021 nfs-04-test-pod-default.yaml
+
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM/nfs-auto-prov# kubectl apply -f nfs-00-rbac.yaml
+serviceaccount/nfs-client-provisioner created
+clusterrole.rbac.authorization.k8s.io/nfs-client-provisioner-runner created
+clusterrolebinding.rbac.authorization.k8s.io/run-nfs-client-provisioner created
+role.rbac.authorization.k8s.io/leader-locking-nfs-client-provisioner created
+rolebinding.rbac.authorization.k8s.io/leader-locking-nfs-client-provisioner created
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM/nfs-auto-prov# kubectl apply -f nfs-01-storageclass-default.yaml
+storageclass.storage.k8s.io/default created
+storageclass.storage.k8s.io/fast created
+storageclass.storage.k8s.io/bigdata created
+storageclass.storage.k8s.io/backup created
+
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM/nfs-auto-prov# kubectl apply -f nfs-02-nfs-ext-provisioner-deployment.yaml
+deployment.apps/nfs-client-provisioner created
+
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM/nfs-auto-prov# kubectl apply -f nfs-03-test-pvc-claim-default.yaml
+persistentvolumeclaim/default created
+persistentvolumeclaim/fast created
+persistentvolumeclaim/backup created
+persistentvolumeclaim/bigdata created
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM/nfs-auto-prov#
+
+
+root@pod641:~/KubernetesLearning/IPU-POD641-SingleM/nfs-auto-prov# kubectl apply -f nfs-04-test-pod-default.yaml
+pod/test-nfs-pvc-pod-default created
+
+
+//Done
+
+
