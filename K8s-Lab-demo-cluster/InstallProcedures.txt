@@ -1,17 +1,52 @@
 //server161-master node에서
 
-sudo kubeadm init --pod-network-cidr=172.31.0.0/16 --apiserver-advertise-address=(218.145.56.73
+sudo kubeadm init --pod-network-cidr=172.31.0.0/16 --apiserver-advertise-address=218.145.56.73
+
+addons] Applied essential addon: CoreDNS
+[addons] Applied essential addon: kube-proxy
+
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
 
   mkdir -p $HOME/.kube
   sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
   sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-kubeadm join 218.145.56.73:6443 --token 97cifj.w9gygw7fg0yeuo5x \
-    --discovery-token-ca-cert-hash sha256:5f66b1661ee5c39a338ed5c24bf096a0922254a199ce0213654b6912c258ec08
+Alternatively, if you are the root user, you can run:
+
+  export KUBECONFIG=/etc/kubernetes/admin.conf
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 218.145.56.73:6443 --token pvgym3.9w0qn3b4tgo85bcv \
+    --discovery-token-ca-cert-hash sha256:b602ced314a5e4c55c1c58ca7321abb8ec80897d3ae97ad7496b344021716215
+
+root@srv161:~#
+
 
 //srv162-workder node에서
-kubeadm join 218.145.56.73:6443 --token 97cifj.w9gygw7fg0yeuo5x \
-    --discovery-token-ca-cert-hash sha256:5f66b1661ee5c39a338ed5c24bf096a0922254a199ce0213654b6912c258ec08
+root@srv162:~# kubeadm join 218.145.56.73:6443 --token pvgym3.9w0qn3b4tgo85bcv \
+>     --discovery-token-ca-cert-hash sha256:b602ced314a5e4c55c1c58ca7321abb8ec80897d3ae97ad7496b344021716215
+[preflight] Running pre-flight checks
+[preflight] Reading configuration from the cluster...
+[preflight] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[kubelet-start] Writing kubelet environment file with flags to file "/var/lib/kubelet/kubeadm-flags.env"
+[kubelet-start] Starting the kubelet
+[kubelet-start] Waiting for the kubelet to perform the TLS Bootstrap...
+
+This node has joined the cluster:
+* Certificate signing request was sent to apiserver and a response was received.
+* The Kubelet was informed of the new secure connection details.
+
+Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
+
+
 
 //serv161-master node에서
 kubectl apply -f calico-mkbahk-20210320.yaml
