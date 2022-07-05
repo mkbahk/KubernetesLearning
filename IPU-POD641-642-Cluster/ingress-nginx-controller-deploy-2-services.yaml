@@ -1,0 +1,79 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-ingress-shop-main-deployment
+  namespace: ingress-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      "app": "ingress-shop-main"
+  template:
+    metadata:
+      name: nginx-ingress-shop-main-pod
+      labels:
+        "app": "ingress-shop-main"
+    spec:
+      hostname: nginx-ingress-shop-main-pod
+      subdomain: svc-shop-main
+      containers:
+      - name: nginx-main-container
+        image: mkbahk/nginx-ingress-controller-main-page:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-ingress-shop-payments-deployment
+  namespace: ingress-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      "app": "ingress-shop-payments"
+  template:
+    metadata:
+      name: nginx-ingress-shop-payments-pod
+      labels:
+        "app": "ingress-shop-payments"
+    spec:
+      hostname: nginx-ingress-shop-payments-pod
+      subdomain: svc-shop-payments
+      containers:
+      - name: nginx-payments-container
+        image: mkbahk/nginx-ingress-controller-payments-page:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-shop-main
+  namespace: ingress-nginx
+spec:
+  selector:
+    "app": "ingress-shop-main"
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-shop-payments
+  namespace: ingress-nginx
+spec:
+  selector:
+    "app": "ingress-shop-payments"
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+---
+# 위의 서비스로는 외부에서 직접 들어오지 않는다. 반드시 ingress-nginx-controller에서 지정된 공인IP로 들어와야 한다.
+
