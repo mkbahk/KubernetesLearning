@@ -26,3 +26,9 @@ apt install dnsutils inetutils-ping net-tools -y
 nslookup nginx1210.nginxweb-svc
 nslookup nginx1210.nginxweb-svc.default.svc.cluster.local
 nslookup ip-ip-ip-ip.default.pod.cluster.local
+
+
+
+//log 찍을 때 실시간 로그도 같이 보고 -f
+kubectl logs pod명 -f
+

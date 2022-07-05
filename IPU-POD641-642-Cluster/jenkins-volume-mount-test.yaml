@@ -1,0 +1,26 @@
+#
+#관리자가 만들어 놓은 pvc를 사용자가 사용함
+#
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: jenkins-pvc-pod
+spec:
+  containers:
+  - name: jenkins-pvc-pod-container
+    image: busybox:stable
+    command:
+      - "/bin/sh"
+    args:
+      - "-c"
+      - "sleep 10000"
+    volumeMounts:
+      - name: jenkins-vol
+        mountPath: "/mnt"
+  restartPolicy: "Never"
+  volumes:
+    - name: jenkins-vol
+      persistentVolumeClaim:
+        claimName: pvc-jenkins
+---
