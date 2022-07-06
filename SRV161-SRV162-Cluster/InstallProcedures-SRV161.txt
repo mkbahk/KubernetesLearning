@@ -1,0 +1,393 @@
+//server161-master node에서
+
+sudo kubeadm init --pod-network-cidr=172.31.0.0/16 --apiserver-advertise-address=218.145.56.73
+
+addons] Applied essential addon: CoreDNS
+[addons] Applied essential addon: kube-proxy
+
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Alternatively, if you are the root user, you can run:
+
+  export KUBECONFIG=/etc/kubernetes/admin.conf
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 218.145.56.73:6443 --token pvgym3.9w0qn3b4tgo85bcv \
+    --discovery-token-ca-cert-hash sha256:b602ced314a5e4c55c1c58ca7321abb8ec80897d3ae97ad7496b344021716215
+
+root@srv161:~#
+
+
+//srv162-workder node에서
+root@srv162:~# kubeadm join 218.145.56.73:6443 --token pvgym3.9w0qn3b4tgo85bcv \
+>     --discovery-token-ca-cert-hash sha256:b602ced314a5e4c55c1c58ca7321abb8ec80897d3ae97ad7496b344021716215
+[preflight] Running pre-flight checks
+[preflight] Reading configuration from the cluster...
+[preflight] FYI: You can look at this config file with 'kubectl -n kube-system get cm kubeadm-config -o yaml'
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[kubelet-start] Writing kubelet environment file with flags to file "/var/lib/kubelet/kubeadm-flags.env"
+[kubelet-start] Starting the kubelet
+[kubelet-start] Waiting for the kubelet to perform the TLS Bootstrap...
+
+This node has joined the cluster:
+* Certificate signing request was sent to apiserver and a response was received.
+* The Kubelet was informed of the new secure connection details.
+
+Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
+
+
+
+//serv161-master node에서
+kubectl apply -f calico-mkbahk-20210320.yaml
+
+
+Every 2.0s: kubectl get pods -o wide --all-namespaces                                                                                               srv161: Mon Jun 27 15:11:28 2022
+
+NAMESPACE     NAME                                       READY   STATUS    RESTARTS   AGE     IP              NODE     NOMINATED NODE   READINESS GATES
+kube-system   calico-kube-controllers-69496d8b75-dkl9t   1/1     Running   0          78s     172.31.200.1    srv162   <none>           <none>
+kube-system   calico-node-bvnw6                          0/1     Running   0          78s     218.145.56.74   srv162   <none>           <none>
+kube-system   calico-node-xztkm                          0/1     Running   0          78s     218.145.56.73   srv161   <none>           <none>
+kube-system   coredns-74ff55c5b-f678x                    1/1     Running   0          3m25s   172.31.132.2    srv161   <none>           <none>
+kube-system   coredns-74ff55c5b-nl7br                    1/1     Running   0          3m25s   172.31.132.0    srv161   <none>           <none>
+kube-system   etcd-srv161                                1/1     Running   0          3m30s   218.145.56.73   srv161   <none>           <none>
+kube-system   kube-apiserver-srv161                      1/1     Running   0          3m30s   218.145.56.73   srv161   <none>           <none>
+kube-system   kube-controller-manager-srv161             1/1     Running   0          3m30s   218.145.56.73   srv161   <none>           <none>
+kube-system   kube-proxy-5fv7q                           1/1     Running   0          2m43s   218.145.56.74   srv162   <none>           <none>
+kube-system   kube-proxy-5xn7x                           1/1     Running   0          3m25s   218.145.56.73   srv161   <none>           <none>
+kube-system   kube-scheduler-srv161                      1/1     Running   0          3m30s   218.145.56.73   srv161   <none>           <none>
+
+root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster# kubectl get nodes -o wide
+NAME     STATUS   ROLES                  AGE     VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION       CONTAINER-RUNTIME
+srv161   Ready    control-plane,master   4m32s   v1.20.0   218.145.56.73   <none>        Ubuntu 18.04.6 LTS   5.4.0-113-generic    docker://20.10.16
+srv162   Ready    <none>                 3m33s   v1.20.0   218.145.56.74   <none>        Ubuntu 18.04.6 LTS   4.15.0-187-generic   docker://19.3.8
+
+
+root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster# kubectl apply -f metallb-00-namespace.yaml
+namespace/metallb-system created
+
+root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster# kubectl apply -f metallb-01-ConfigMap.yaml
+configmap/config created
+
+
+root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster# kubectl apply -f metallb-02-install.yaml
+podsecuritypolicy.policy/controller created
+podsecuritypolicy.policy/speaker created
+serviceaccount/controller created
+serviceaccount/speaker created
+clusterrole.rbac.authorization.k8s.io/metallb-system:controller created
+clusterrole.rbac.authorization.k8s.io/metallb-system:speaker created
+role.rbac.authorization.k8s.io/config-watcher created
+role.rbac.authorization.k8s.io/pod-lister created
+role.rbac.authorization.k8s.io/controller created
+clusterrolebinding.rbac.authorization.k8s.io/metallb-system:controller created
+clusterrolebinding.rbac.authorization.k8s.io/metallb-system:speaker created
+rolebinding.rbac.authorization.k8s.io/config-watcher created
+rolebinding.rbac.authorization.k8s.io/pod-lister created
+rolebinding.rbac.authorization.k8s.io/controller created
+daemonset.apps/speaker created
+deployment.apps/controller created
+root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster#
+
+
+Every 2.0s: kubectl get pods -A                                                                                                 srv161: Mon Jul  4 07:58:43 2022
+
+NAMESPACE        NAME                                       READY   STATUS    RESTARTS   AGE
+kube-system      calico-kube-controllers-69496d8b75-txbqr   1/1     Running   0          36m
+kube-system      calico-node-82pmv                          0/1     Running   0          36m
+kube-system      calico-node-97pqd                          0/1     Running   0          36m
+kube-system      coredns-74ff55c5b-gpxj7                    1/1     Running   0          44m
+kube-system      coredns-74ff55c5b-kslsh                    1/1     Running   0          44m
+kube-system      etcd-srv161                                1/1     Running   0          44m
+kube-system      kube-apiserver-srv161                      1/1     Running   0          44m
+kube-system      kube-controller-manager-srv161             1/1     Running   0          44m
+kube-system      kube-proxy-bg8fb                           1/1     Running   0          42m
+kube-system      kube-proxy-bghn7                           1/1     Running   0          44m
+kube-system      kube-scheduler-srv161                      1/1     Running   0          44m
+metallb-system   controller-6b78bff7d9-4wqxt                1/1     Running   0          34s
+metallb-system   speaker-7jrgw                              1/1     Running   0          34s
+metallb-system   speaker-wpdbr                              1/1     Running   0          34s
+
+
+root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster# bash metallb-03-nginx-test-install.sh
+deployment.apps/nginx-metallb-test created
+service/nginx-metallb-test exposed
+NAME                 TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)        AGE
+kubernetes           ClusterIP      10.96.0.1        <none>          443/TCP        9m35s
+nginx-metallb-test   LoadBalancer   10.105.171.229   218.145.56.80   80:31630/TCP   0s
+root@srv161:~/KubernetesLearning/K8s-Lab-demo-cluster#
+
+//
+//bash completion install
+//
+kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
+kubeadm completion bash | sudo tee /etc/bash_completion.d/kubeadm > /dev/null
+
+//
+//NFS Dynamic Provisioning Install
+//
+root@srv161:~/KubernetesLearning/SRV161-SRV162-Cluster/nfs-auto-prov# kubectl apply -f nfs-00-rbac.yaml
+serviceaccount/nfs-client-provisioner created
+clusterrole.rbac.authorization.k8s.io/nfs-client-provisioner-runner created
+clusterrolebinding.rbac.authorization.k8s.io/run-nfs-client-provisioner created
+role.rbac.authorization.k8s.io/leader-locking-nfs-client-provisioner created
+rolebinding.rbac.authorization.k8s.io/leader-locking-nfs-client-provisioner created
+root@srv161:~/KubernetesLearning/SRV161-SRV162-Cluster/nfs-auto-prov# kubectl apply -f nfs-01-storageclass-default.yaml
+storageclass.storage.k8s.io/sc-default created
+storageclass.storage.k8s.io/sc-fast created
+storageclass.storage.k8s.io/sc-bigdata created
+storageclass.storage.k8s.io/sc-backup created
+root@srv161:~/KubernetesLearning/SRV161-SRV162-Cluster/nfs-auto-prov# kubectl apply -f nfs-02-nfs-ext-provisioner-deployment.yaml
+deployment.apps/nfs-client-provisioner created
+root@srv161:~/KubernetesLearning/SRV161-SRV162-Cluster/nfs-auto-prov# kubectl apply -f nfs-03-test-pvc-claim-default.yaml
+persistentvolumeclaim/pvc-default created
+persistentvolumeclaim/pvc-fast created
+persistentvolumeclaim/pvc-backup created
+persistentvolumeclaim/pvc-bigdata created
+
+
+root@srv161:~/KubernetesLearning/SRV161-SRV162-Cluster/nfs-auto-prov# kubectl apply -f nfs-04-test-pod-default.yaml
+pod/test-nfs-pvc-pod-default created
+
+Every 2.0s: kubectl get pods -A                                                                                                 srv161: Mon Jul  4 08:14:59 2022
+
+NAMESPACE        NAME                                       READY   STATUS      RESTARTS   AGE
+default          nfs-client-provisioner-759bc7f67b-sl8wv    1/1     Running     0          9m13s
+default          test-nfs-pvc-pod-default                   0/1     Completed   0          7m58s
+kube-system      calico-kube-controllers-69496d8b75-txbqr   1/1     Running     0          53m
+kube-system      calico-node-82pmv                          0/1     Running     0          53m
+kube-system      calico-node-97pqd                          0/1     Running     0          53m
+kube-system      coredns-74ff55c5b-gpxj7                    1/1     Running     0          60m
+kube-system      coredns-74ff55c5b-kslsh                    1/1     Running     0          60m
+kube-system      etcd-srv161                                1/1     Running     0          60m
+kube-system      kube-apiserver-srv161                      1/1     Running     0          60m
+kube-system      kube-controller-manager-srv161             1/1     Running     0          60m
+kube-system      kube-proxy-bg8fb                           1/1     Running     0          58m
+kube-system      kube-proxy-bghn7                           1/1     Running     0          60m
+kube-system      kube-scheduler-srv161                      1/1     Running     0          60m
+metallb-system   controller-6b78bff7d9-4wqxt                1/1     Running     0          16m
+metallb-system   speaker-7jrgw                              1/1     Running     0          16m
+metallb-system   speaker-wpdbr                              1/1     Running     0          16m
+
+//
+//Dashboard 설치
+//
+root@srv161:~/KubernetesLearning/SRV161-SRV162-Cluster# kubectl apply -f dashboard-00-role-binding-mkbahk-20210427.yaml
+clusterrolebinding.rbac.authorization.k8s.io/kubernetes-dashboard2 created
+
+root@srv161:~/KubernetesLearning/SRV161-SRV162-Cluster# kubectl apply -f dashboard-01-2.3.1-recommended-mkbahk-20210623.yaml
+namespace/kubernetes-dashboard created
+serviceaccount/kubernetes-dashboard created
+service/kubernetes-dashboard created
+secret/kubernetes-dashboard-certs created
+secret/kubernetes-dashboard-csrf created
+secret/kubernetes-dashboard-key-holder created
+configmap/kubernetes-dashboard-settings created
+role.rbac.authorization.k8s.io/kubernetes-dashboard created
+clusterrole.rbac.authorization.k8s.io/kubernetes-dashboard created
+rolebinding.rbac.authorization.k8s.io/kubernetes-dashboard created
+clusterrolebinding.rbac.authorization.k8s.io/kubernetes-dashboard created
+deployment.apps/kubernetes-dashboard created
+service/dashboard-metrics-scraper created
+deployment.apps/dashboard-metrics-scraper created
+
+root@srv161:~/KubernetesLearning/SRV161-SRV162-Cluster# kubectl apply -f dashboard-02-metric-server-components-cf-changed-mkbahk-202100427.yaml
+clusterrole.rbac.authorization.k8s.io/system:aggregated-metrics-reader created
+clusterrolebinding.rbac.authorization.k8s.io/metrics-server:system:auth-delegator created
+rolebinding.rbac.authorization.k8s.io/metrics-server-auth-reader created
+apiservice.apiregistration.k8s.io/v1beta1.metrics.k8s.io created
+serviceaccount/metrics-server created
+deployment.apps/metrics-server created
+service/metrics-server created
+clusterrole.rbac.authorization.k8s.io/system:metrics-server created
+clusterrolebinding.rbac.authorization.k8s.io/system:metrics-server created
+
+NAMESPACE              NAME                                         READY   STATUS      RESTARTS   AGE
+default                nfs-client-provisioner-759bc7f67b-sl8wv      1/1     Running     0          23m
+default                test-nfs-pvc-pod-default                     0/1     Completed   0          22m
+kube-system            calico-kube-controllers-69496d8b75-txbqr     1/1     Running     0          67m
+kube-system            calico-node-82pmv                            0/1     Running     0          67m
+kube-system            calico-node-97pqd                            0/1     Running     0          67m
+kube-system            coredns-74ff55c5b-gpxj7                      1/1     Running     0          75m
+kube-system            coredns-74ff55c5b-kslsh                      1/1     Running     0          75m
+kube-system            etcd-srv161                                  1/1     Running     0          75m
+kube-system            kube-apiserver-srv161                        1/1     Running     0          75m
+kube-system            kube-controller-manager-srv161               1/1     Running     0          75m
+kube-system            kube-proxy-bg8fb                             1/1     Running     0          73m
+kube-system            kube-proxy-bghn7                             1/1     Running     0          75m
+kube-system            kube-scheduler-srv161                        1/1     Running     0          75m
+kube-system            metrics-server-8947d5698-grgwm               1/1     Running     0          2m29s
+kubernetes-dashboard   dashboard-metrics-scraper-79c5968bdc-p2r7t   1/1     Running     0          2m41s
+kubernetes-dashboard   kubernetes-dashboard-658485d5c7-wgd7n        1/1     Running     0          2m41s
+metallb-system         controller-6b78bff7d9-4wqxt                  1/1     Running     0          31m
+metallb-system         speaker-7jrgw                                1/1     Running     0          31m
+metallb-system         speaker-wpdbr                                1/1     Running     0          31m
+
+root@srv161:~#  kubectl -n kubernetes-dashboard get secret
+NAME                               TYPE                                  DATA   AGE
+default-token-m9wfm                kubernetes.io/service-account-token   3      3m18s
+kubernetes-dashboard-certs         Opaque                                0      3m18s
+kubernetes-dashboard-csrf          Opaque                                1      3m17s
+kubernetes-dashboard-key-holder    Opaque                                2      3m17s
+kubernetes-dashboard-token-cdcgs   kubernetes.io/service-account-token   3      3m18s
+root@srv161:~#
+
+
+root@srv161:~#  kubectl -n kubernetes-dashboard get secret kubernetes-dashboard-token-cdcgs \-o jsonpath='{.data.token}' | base64 --decode
+eyJhbGciOiJSUzI1NiIsImtpZCI6IlE2RlZ4MGtSbTFzZWFXVlBDQWZxd0VnUG03VkJOcFZJa2dPTlRGUUlyQ28ifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZC10b2tlbi1jZGNncyIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjllOWI1MWZhLTAyOGItNGQ5NC1hZjZjLWUzOGJhMzMyMWY3NCIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlcm5ldGVzLWRhc2hib2FyZDprdWJlcm5ldGVzLWRhc2hib2FyZCJ9.b2BE5qd5bOEA1lre4ubtfPBH4Qo09vft3Uh4Xf2JrjX0iv0vQKZt7aMElEHNXCQ6LfHTE0WCRyhEo7DJ0U8AGb2PCT-bVXNFNPHnz0ypmoSMHj0ttQUn-bVTftB6cEILAqRJTmgb8MHp7rQw_r3toNRcEZ-aNRZonR-FI15hXy9LoXV7vp5onlsw_TDNvL4T5zxL5Z1c7rKKATqHgp0vFQJ5PzLthuCEHxiyGf_-DfUI3KkvdWfYlKBMZD6oHpAgH0pSbMPM9r5Pq_oHf1cyZQ5EZGwHf3NbPVy7hNfhwDyFtb5SdUM4BBxn2F9-MyqQc_DnI51p2IAMd8POveHZ7Q
+
+
+kubectl -n kubernetes-dashboard get secret kubernetes-dashboard-token-d9wct \-o jsonpath='{.data.token}' | base64 --decode
+
+eyJhbGciOiJSUzI1NiIsImtpZCI6InBrN3g5Z0ZqbmRzejRac0RUQUhJRmdVb2E5SFVOYlU3UVRtd3NDX1lDSkkifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZC10b2tlbi1kOXdjdCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJrdWJlcm5ldGVzLWRhc2hib2FyZCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjdiZmMwOTFhLTc2MDItNDI5OS1iODc1LWM2ZWNjYmViZjRjMCIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlcm5ldGVzLWRhc2hib2FyZDprdWJlcm5ldGVzLWRhc2hib2FyZCJ9.nEkc3bAdVhFFZSuODJOBhxBFxLsPmgv3NHy8N0tMVTOvfNdKUNKvzuMetwq59gyROXcPeySVZhYsyzGgGIZQoNDNF6hJgbUI3RhCs_oMoDKl-S_mFIJvr-vTUdoNcOHDzScOqSTnNQT58ER5Fn-Sd9cWjkk0MlLk6zio6tSmO1buuqr-G5Xykir-afMFfMgHZwjzI2IG7DgivdCJrc6fUNXfCH8TgD4eAb1bTGmj7Nj1XStjtm9NVEbcCDaC6l6tDyl7f0gFKw-oK-jJnjk6Hsw0EtptiIjpGTNzVhQ8kd-xpjd9FqQAcDC5azKBPtOSZMsa_vQrXoiiHPCck6Phpg
+
+
+
+grep 'client-certificate-data' ~/.kube/config | head -n 1 | awk '{print $2}' | base64 -d >> client.crt 
+grep 'client-key-data' ~/.kube/config | head -n 1 | awk '{print $2}' | base64 -d >> client.key 
+openssl pkcs12 -export -clcerts -inkey client.key -in client.crt -out client.p12 -name "srv161"
+
+//Windows & MacOS 설치
+client.p12
+
+//Dashboard에 공인IP 제공
+kubectl edit svc kubernetes-dashboard -n kubernetes-dashboard
+  ClusterIP --> LoadBalancer로 변경
+  :wq!
+
+root@srv161:~# kubectl get svc -A
+NAMESPACE              NAME                        TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)                  AGE
+default                kubernetes                  ClusterIP      10.96.0.1        <none>          443/TCP                  81m
+kube-system            kube-dns                    ClusterIP      10.96.0.10       <none>          53/UDP,53/TCP,9153/TCP   81m
+kube-system            metrics-server              ClusterIP      10.110.134.174   <none>          443/TCP                  8m43s
+kubernetes-dashboard   dashboard-metrics-scraper   ClusterIP      10.108.60.196    <none>          8000/TCP                 8m55s
+kubernetes-dashboard   kubernetes-dashboard        LoadBalancer   10.107.16.140    218.145.56.80   443:31877/TCP            8m56s
+root@srv161:~#
+
+//Dashbaord 접근
+https://218.145.56.80/
+
+
+//Master에도 POD생성할 수 있도록 taint 해제
+root@srv161:~/KubernetesLearning/SRV161-SRV162-Cluster# kubectl taint nodes --all node-role.kubernetes.io/master-
+node/srv161 untainted
+error: taint "node-role.kubernetes.io/master" not found
+
+//모니터링용 Prometheus & Grafana Install
+
+root@srv161:~/KubernetesLearning/SRV161-SRV162-Cluster# snap install helm --classic
+helm 3.7.0 from Snapcrafters installed
+
+root@srv161:~# helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+"prometheus-community" already exists with the same configuration, skipping
+root@srv161:~# helm repo update
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "prometheus-community" chart repository
+Update Complete. ⎈Happy Helming!⎈
+root@srv161:~#
+root@srv161:~# helm list
+NAME	NAMESPACE	REVISION	UPDATED	STATUS	CHART	APP VERSION
+root@srv161:~#
+root@srv161:~# helm install grafana-prometheus prometheus-community/kube-prometheus-stack --version 16.11.0
+
+
+NAME: grafana-prometheus
+LAST DEPLOYED: Mon Jul  4 08:47:39 2022
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+NOTES:
+kube-prometheus-stack has been installed. Check its status by running:
+  kubectl --namespace default get pods -l "release=grafana-prometheus"
+
+Visit https://github.com/prometheus-operator/kube-prometheus for instructions on how to create & configure Alertmanager and Prometheus instances using the Operator.
+root@srv161:~#
+
+root@srv161:~# helm list
+NAME              	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART                        	APP VERSION
+grafana-prometheus	default  	1       	2022-07-04 08:47:39.727833226 +0900 KST	deployed	kube-prometheus-stack-16.11.0	0.48.1
+root@srv161:~#
+
+
+NAMESPACE              NAME                                                     READY   STATUS      RESTARTS   AGE
+default                alertmanager-grafana-prometheus-kube-pr-alertmanager-0   2/2     Running     0          42s
+default                grafana-prometheus-5677c77b7b-dnwn2                      2/2     Running     0          67s
+default                grafana-prometheus-kube-pr-operator-7df4f868d5-k76kt     1/1     Running     0          67s
+default                grafana-prometheus-kube-state-metrics-58dd7c797d-kpmqs   1/1     Running     0          67s
+default                grafana-prometheus-prometheus-node-exporter-kp4vh        1/1     Running     0          67s
+default                grafana-prometheus-prometheus-node-exporter-p7pn7        1/1     Running     0          67s
+default                nfs-client-provisioner-759bc7f67b-sl8wv                  1/1     Running     0          43m
+default                prometheus-grafana-prometheus-kube-pr-prometheus-0       2/2     Running     1          41s
+default                test-nfs-pvc-pod-default                                 0/1     Completed   0          42m
+kube-system            calico-kube-controllers-69496d8b75-txbqr                 1/1     Running     0          87m
+kube-system            calico-node-82pmv                                        0/1     Running     0          87m
+kube-system            calico-node-97pqd                                        0/1     Running     0          87m
+kube-system            coredns-74ff55c5b-gpxj7                                  1/1     Running     0          94m
+kube-system            coredns-74ff55c5b-kslsh                                  1/1     Running     0          94m
+kube-system            etcd-srv161                                              1/1     Running     0          94m
+kube-system            kube-apiserver-srv161                                    1/1     Running     0          94m
+kube-system            kube-controller-manager-srv161                           1/1     Running     0          94m
+kube-system            kube-proxy-bg8fb                                         1/1     Running     0          92m
+kube-system            kube-proxy-bghn7                                         1/1     Running     0          94m
+kube-system            kube-scheduler-srv161                                    1/1     Running     0          94m
+kube-system            metrics-server-8947d5698-grgwm                           1/1     Running     0          21m
+kubernetes-dashboard   dashboard-metrics-scraper-79c5968bdc-p2r7t               1/1     Running     0          22m
+kubernetes-dashboard   kubernetes-dashboard-658485d5c7-wgd7n                    1/1     Running     0          22m
+metallb-system         controller-6b78bff7d9-4wqxt                              1/1     Running     0          50m
+metallb-system         speaker-7jrgw                                            1/1     Running     0          50m
+metallb-system         speaker-wpdbr                                            1/1     Running     0          50m
+
+
+root@srv161:~# kubectl edit svc  grafana-prometheus
+
+root@srv161:~# kubectl get svc -A
+NAMESPACE              NAME                                                 TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)                        AGE
+default                alertmanager-operated                                ClusterIP      None             <none>          9093/TCP,9094/TCP,9094/UDP     6m20s
+default                grafana-prometheus                                   LoadBalancer   10.111.119.152   218.145.56.81   80:30489/TCP                   6m45s
+default                grafana-prometheus-kube-pr-alertmanager              ClusterIP      10.104.172.112   <none>          9093/TCP                       6m45s
+default                grafana-prometheus-kube-pr-operator                  ClusterIP      10.109.73.220    <none>          443/TCP                        6m45s
+default                grafana-prometheus-kube-pr-prometheus                ClusterIP      10.104.182.158   <none>          9090/TCP                       6m45s
+default                grafana-prometheus-kube-state-metrics                ClusterIP      10.108.227.152   <none>          8080/TCP                       6m45s
+default                grafana-prometheus-prometheus-node-exporter          ClusterIP      10.111.175.143   <none>          9100/TCP                       6m45s
+default                kubernetes                                           ClusterIP      10.96.0.1        <none>          443/TCP                        100m
+default                prometheus-operated                                  ClusterIP      None             <none>          9090/TCP                       6m19s
+kube-system            grafana-prometheus-kube-pr-coredns                   ClusterIP      None             <none>          9153/TCP                       6m45s
+kube-system            grafana-prometheus-kube-pr-kube-controller-manager   ClusterIP      None             <none>          10252/TCP                      6m45s
+kube-system            grafana-prometheus-kube-pr-kube-etcd                 ClusterIP      None             <none>          2379/TCP                       6m45s
+kube-system            grafana-prometheus-kube-pr-kube-proxy                ClusterIP      None             <none>          10249/TCP                      6m45s
+kube-system            grafana-prometheus-kube-pr-kube-scheduler            ClusterIP      None             <none>          10251/TCP                      6m45s
+kube-system            grafana-prometheus-kube-pr-kubelet                   ClusterIP      None             <none>          10250/TCP,10255/TCP,4194/TCP   6m20s
+kube-system            kube-dns                                             ClusterIP      10.96.0.10       <none>          53/UDP,53/TCP,9153/TCP         100m
+kube-system            metrics-server                                       ClusterIP      10.110.134.174   <none>          443/TCP                        27m
+kubernetes-dashboard   dashboard-metrics-scraper                            ClusterIP      10.108.60.196    <none>          8000/TCP                       27m
+kubernetes-dashboard   kubernetes-dashboard                                 LoadBalancer   10.107.16.140    218.145.56.80   443:31877/TCP                  27m
+root@srv161:~#
+
+//Grafana Access
+http://218.145.56.81/
+
+포트 3000번 아니고 그냥 80번
+admin@prom-operator
+
+
+//
+// ingress-nginx-controller 설치
+//
+
+
+
+//ingress-nginx 전체 삭제 시 namespace삭제되지 않는 문제 발생
+https://computingforgeeks.com/how-to-force-delete-a-kubernetes-namespace/
+
+curl -k -H "Content-Type: application/json" -X PUT --data-binary \
+  @tmp.json http://127.0.0.1:8001/api/v1/namespaces/ingress-nginx/finalize

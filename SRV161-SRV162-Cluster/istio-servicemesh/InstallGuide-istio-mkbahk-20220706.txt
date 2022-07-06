@@ -1,0 +1,206 @@
+Reference: https://joobly.tistory.com/60
+
+//istio 파일 다운로드
+curl -L https://istio.io/downloadIstio | sh -
+//최신버젼이 1.14.1 이 다운됨
+cd istio-1.14.1
+export PATH=$PWD/bin:$PATH
+
+
+root@srv161:~# curl -L https://istio.io/downloadIstio | sh -
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   101  100   101    0     0    292      0 --:--:-- --:--:-- --:--:--   292
+100  4926  100  4926    0     0   7532      0 --:--:-- --:--:-- --:--:--  7532
+
+
+Downloading istio-1.14.1 from https://github.com/istio/istio/releases/download/1.14.1/istio-1.14.1-linux-amd64.tar.gz ...
+
+Istio 1.14.1 Download Complete!
+
+Istio has been successfully downloaded into the istio-1.14.1 folder on your system.
+
+Next Steps:
+See https://istio.io/latest/docs/setup/install/ to add Istio to your Kubernetes cluster.
+
+To configure the istioctl client tool for your workstation,
+add the /root/istio-1.14.1/bin directory to your environment path variable with:
+	 export PATH="$PATH:/root/istio-1.14.1/bin"
+
+Begin the Istio pre-installation check by running:
+	 istioctl x precheck
+
+Need more information? Visit https://istio.io/latest/docs/setup/install/
+
+
+
+
+//설치할 프로파일 확인하고, 설치
+istioctl profile list
+istioctl install --set profile=demo -y
+kubectl label namespace default istio-injection=enabled
+
+root@srv161:~/istio-1.14.1# istioctl profile list
+Istio configuration profiles:
+    default
+    demo
+    empty
+    external
+    minimal
+    openshift
+    preview
+    remote
+root@srv161:~/istio-1.14.1# istioctl install --set profile=demo -y
+- Processing resources for Istio core.
+✔ Istio core installed
+✔ Istiod installed
+✔ Egress gateways installed
+✔ Ingress gateways installed
+✔ Installation complete                                                                                                                                                                                                 Making this installation the default for injection and validation.
+
+Thank you for installing Istio 1.14.  Please take a few minutes to tell us about your install/upgrade experience!  https://forms.gle/yEtCbt45FZ3VoDT5A
+root@srv161:~/istio-1.14.1# kubectl label namespace default istio-injection=enabled
+namespace/default labeled
+root@srv161:~/istio-1.14.1#
+
+
+//Sample BookInfo 설치
+kubectl apply -f samples/bookinfo/platform/kube/bookinfo.yaml
+kubectl get services
+kubectl get pods
+kubectl exec "$(kubectl get pod -l app=ratings -o jsonpath='{.items[0].metadata.name}')" -c ratings -- curl -s productpage:9080/productpage | grep -o "<title>.*</title>"
+
+
+root@srv161:~/istio-1.14.1# kubectl apply -f samples/bookinfo/platform/kube/bookinfo.yaml
+service/details created
+serviceaccount/bookinfo-details created
+deployment.apps/details-v1 created
+service/ratings created
+serviceaccount/bookinfo-ratings created
+deployment.apps/ratings-v1 created
+service/reviews created
+serviceaccount/bookinfo-reviews created
+deployment.apps/reviews-v1 created
+deployment.apps/reviews-v2 created
+deployment.apps/reviews-v3 created
+service/productpage created
+serviceaccount/bookinfo-productpage created
+deployment.apps/productpage-v1 created
+root@srv161:~/istio-1.14.1# kubectl get services
+NAME                                          TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)                      AGE
+alertmanager-operated                         ClusterIP      None             <none>          9093/TCP,9094/TCP,9094/UDP   18h
+details                                       ClusterIP      10.107.157.180   <none>          9080/TCP                     0s
+grafana-prometheus                            LoadBalancer   10.99.128.106    218.145.56.81   80:31463/TCP                 18h
+grafana-prometheus-kube-pr-alertmanager       ClusterIP      10.108.32.247    <none>          9093/TCP                     18h
+grafana-prometheus-kube-pr-operator           ClusterIP      10.110.10.12     <none>          443/TCP                      18h
+grafana-prometheus-kube-pr-prometheus         ClusterIP      10.101.200.186   <none>          9090/TCP                     18h
+grafana-prometheus-kube-state-metrics         ClusterIP      10.107.170.29    <none>          8080/TCP                     18h
+grafana-prometheus-prometheus-node-exporter   ClusterIP      10.109.164.240   <none>          9100/TCP                     18h
+kubernetes                                    ClusterIP      10.96.0.1        <none>          443/TCP                      19h
+nginxscale-svc                                LoadBalancer   10.101.37.76     218.145.56.83   80:30701/TCP                 48m
+productpage                                   ClusterIP      10.107.4.249     <none>          9080/TCP                     0s
+prometheus-operated                           ClusterIP      None             <none>          9090/TCP                     18h
+ratings                                       ClusterIP      10.97.19.81      <none>          9080/TCP                     0s
+reviews                                       ClusterIP      10.108.71.47     <none>          9080/TCP                     0s
+root@srv161:~/istio-1.14.1# kubectl get pods
+NAME                                                     READY   STATUS      RESTARTS   AGE
+alertmanager-grafana-prometheus-kube-pr-alertmanager-0   2/2     Running     0          18h
+grafana-prometheus-5677c77b7b-5qghn                      2/2     Running     0          18h
+grafana-prometheus-kube-pr-operator-7df4f868d5-grbtx     1/1     Running     0          18h
+grafana-prometheus-kube-state-metrics-58dd7c797d-4g752   1/1     Running     0          18h
+grafana-prometheus-prometheus-node-exporter-5wxp7        1/1     Running     0          18h
+grafana-prometheus-prometheus-node-exporter-t7rkj        1/1     Running     0          18h
+nfs-client-provisioner-759bc7f67b-ll2kg                  1/1     Running     0          18h
+nginxscale-deployment-7f7748f58c-dxzmt                   1/1     Running     0          36m
+nginxscale-deployment-7f7748f58c-n7rd5                   1/1     Running     0          36m
+nginxscale-deployment-7f7748f58c-pfq7c                   1/1     Running     0          36m
+productpage-v1-7795568889-9zrrf                          0/2     Init:0/1    0          0s
+prometheus-grafana-prometheus-kube-pr-prometheus-0       2/2     Running     1          18h
+reviews-v2-858f99c99-25tfh                               0/2     Init:0/1    0          0s
+reviews-v3-7886dd86b9-tw79r                              0/2     Init:0/1    0          0s
+test-nfs-pvc-pod-default                                 0/1     Completed   0          18h
+
+root@srv161:~/istio-1.14.1# kubectl exec "$(kubectl get pod -l app=ratings -o jsonpath='{.items[0].metadata.name}')" -c ratings -- curl -s productpage:9080/productpage | grep -o "<title>.*</title>"
+<title>Simple Bookstore App</title>
+
+
+
+
+//istio-gateway 설치
+kubectl apply -f samples/bookinfo/networking/bookinfo-gateway.yaml
+istioctl analyze
+
+root@srv161:~/istio-1.14.1# kubectl apply -f samples/bookinfo/networking/bookinfo-gateway.yaml
+gateway.networking.istio.io/bookinfo-gateway created
+virtualservice.networking.istio.io/bookinfo created
+root@srv161:~/istio-1.14.1# istioctl analyze
+Warning [IST0103] (Pod default/alertmanager-grafana-prometheus-kube-pr-alertmanager-0) The pod default/alertmanager-grafana-prometheus-kube-pr-alertmanager-0 is missing the Istio proxy. This can often be resolved by restarting or redeploying the workload.
+Warning [IST0103] (Pod default/grafana-prometheus-5677c77b7b-5qghn) The pod default/grafana-prometheus-5677c77b7b-5qghn is missing the Istio proxy. This can often be resolved by restarting or redeploying the workload.
+Warning [IST0103] (Pod default/grafana-prometheus-kube-pr-operator-7df4f868d5-grbtx) The pod default/grafana-prometheus-kube-pr-operator-7df4f868d5-grbtx is missing the Istio proxy. This can often be resolved by restarting or redeploying the workload.
+Warning [IST0103] (Pod default/grafana-prometheus-kube-state-metrics-58dd7c797d-4g752) The pod default/grafana-prometheus-kube-state-metrics-58dd7c797d-4g752 is missing the Istio proxy. This can often be resolved by restarting or redeploying the workload.
+Warning [IST0103] (Pod default/grafana-prometheus-prometheus-node-exporter-5wxp7) The pod default/grafana-prometheus-prometheus-node-exporter-5wxp7 is missing the Istio proxy. This can often be resolved by restarting or redeploying the workload.
+Warning [IST0103] (Pod default/grafana-prometheus-prometheus-node-exporter-t7rkj) The pod default/grafana-prometheus-prometheus-node-exporter-t7rkj is missing the Istio proxy. This can often be resolved by restarting or redeploying the workload.
+Warning [IST0103] (Pod default/nfs-client-provisioner-759bc7f67b-ll2kg) The pod default/nfs-client-provisioner-759bc7f67b-ll2kg is missing the Istio proxy. This can often be resolved by restarting or redeploying the workload.
+Warning [IST0103] (Pod default/nginxscale-deployment-7f7748f58c-dxzmt) The pod default/nginxscale-deployment-7f7748f58c-dxzmt is missing the Istio proxy. This can often be resolved by restarting or redeploying the workload.
+Warning [IST0103] (Pod default/nginxscale-deployment-7f7748f58c-n7rd5) The pod default/nginxscale-deployment-7f7748f58c-n7rd5 is missing the Istio proxy. This can often be resolved by restarting or redeploying the workload.
+Warning [IST0103] (Pod default/nginxscale-deployment-7f7748f58c-pfq7c) The pod default/nginxscale-deployment-7f7748f58c-pfq7c is missing the Istio proxy. This can often be resolved by restarting or redeploying the workload.
+Warning [IST0103] (Pod default/prometheus-grafana-prometheus-kube-pr-prometheus-0) The pod default/prometheus-grafana-prometheus-kube-pr-prometheus-0 is missing the Istio proxy. This can often be resolved by restarting or redeploying the workload.
+Warning [IST0103] (Pod default/test-nfs-pvc-pod-default) The pod default/test-nfs-pvc-pod-default is missing the Istio proxy. This can often be resolved by restarting or redeploying the workload.
+Info [IST0118] (Service default/alertmanager-operated) Port name web (port: 9093, targetPort: web) doesn't follow the naming convention of Istio port.
+Info [IST0118] (Service default/grafana-prometheus-kube-pr-alertmanager) Port name web (port: 9093, targetPort: 9093) doesn't follow the naming convention of Istio port.
+Info [IST0118] (Service default/grafana-prometheus-kube-pr-prometheus) Port name web (port: 9090, targetPort: 9090) doesn't follow the naming convention of Istio port.
+Info [IST0118] (Service default/grafana-prometheus-prometheus-node-exporter) Port name metrics (port: 9100, targetPort: 9100) doesn't follow the naming convention of Istio port.
+Info [IST0118] (Service default/grafana-prometheus) Port name service (port: 80, targetPort: 3000) doesn't follow the naming convention of Istio port.
+Info [IST0118] (Service default/nginxscale-svc) Port name  (port: 80, targetPort: 80) doesn't follow the naming convention of Istio port.
+Info [IST0118] (Service default/prometheus-operated) Port name web (port: 9090, targetPort: web) doesn't follow the naming convention of Istio port.
+root@srv161:~/istio-1.14.1#
+
+//istio-ingressgateway 가 LoadBalancer 서비스를 통해 공인IP를 받음
+root@srv161:~/istio-1.14.1# kubectl get svc -n istio-system
+NAME                   TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)                                                                      AGE
+istio-egressgateway    ClusterIP      10.98.21.66      <none>          80/TCP,443/TCP                                                               21m
+istio-ingressgateway   LoadBalancer   10.104.56.83     218.145.56.84   15021:31358/TCP,80:30997/TCP,443:30439/TCP,31400:32036/TCP,15443:31206/TCP   21m
+istiod                 ClusterIP      10.110.117.157   <none>          15010/TCP,15012/TCP,443/TCP,15014/TCP                                        22m
+root@srv161:~/istio-1.14.1#
+
+
+//웹브라우저로 접근
+http://218.145.56.84/productpage
+
+
+
+//kiali 는 istio 설치폴더에 /samples/addons/* 모든 것을 설치해야 함
+
+root@srv161:~/istio-1.14.1/samples/addons# ll
+total 292
+drwxr-xr-x  3 root root   4096  6월  8 11:10 ./
+drwxr-xr-x 23 root root   4096  6월  8 11:10 ../
+drwxr-xr-x  2 root root   4096  6월  8 11:10 extras/
+-rw-r--r--  1 root root 245578  6월  8 11:10 grafana.yaml
+-rw-r--r--  1 root root   2533  6월  8 11:10 jaeger.yaml
+-rw-r--r--  1 root root  11727  6월  8 11:10 kiali.yaml
+-rw-r--r--  1 root root  14114  6월  8 11:10 prometheus.yaml
+-rw-r--r--  1 root root   5194  6월  8 11:10 README.md
+root@srv161:~/istio-1.14.1/samples/addons#
+
+
+http://218.145.56.85:20001/kiali/console/namespaces/default/applications/productpage?duration=300&refresh=15000
+
+
+
+Applications > Namespace: default > productpage
+
+//
+#!/bin/bash
+while true
+do
+  curl http://218.145.56.84/productpage
+  sleep 0.1
+done
+//
+while true; do curl http://218.145.56.84/productpage; sleep 0.1; done;
+
+//
+while true; do curl http://218.145.56.83; sleep 0.1; done;
+
+kubectl delete kiali --all --all-namespaces
