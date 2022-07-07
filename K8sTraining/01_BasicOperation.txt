@@ -180,8 +180,11 @@ ping 172.28.17.94
 curl http://172.28.17.94:80/
 curl http://공인ip:80/  //않되는 것이 정상
 
+kubectl delete pods nginxweb
+
 
 kubectl create deployment multiweb --image=httpd:latest --replicas=3
+kubectl create deployment multiweb --image=httpd:latest --replicas=3 --dry-run=client -o yaml
 kubectl get deployments.apps -o wide
 
 kubectl get deployments.apps
@@ -189,12 +192,19 @@ root@pod641:~# kubectl get deployments.apps
 NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
 multiweb                          3/3     3            3           2m30s
 
+kubectl get replicaset
+root@pod641:~/KubernetesLearning# kubectl get replicaset
+NAME                                DESIRED   CURRENT   READY   AGE
+multiweb-dc7ddc4f8                  3         3         3       54s
+nfs-client-provisioner-759bc7f67b   1         1         1       9d
+
 kubectl get pod -o wide
 root@pod641:~# kubectl get pod -o wide
 NAME                                               READY   STATUS      RESTARTS   AGE     IP               NODE     NOMINATED NODE   READINESS GATES
 multiweb-dc7ddc4f8-27w89                           1/1     Running     0          2m53s   172.28.17.95     pod641   <none>           <none>
 multiweb-dc7ddc4f8-p7j7c                           1/1     Running     0          2m53s   172.28.235.249   pod642   <none>           <none>
 multiweb-dc7ddc4f8-wtsp8                           1/1     Running     0          2m53s   172.28.235.250   pod642   <none>           <none>
+
 
 kubectl get deployments.apps multiweb -o yaml
 kubectl delete deployments.apps multiweb
@@ -298,6 +308,148 @@ kubectl delete -f nginxweb-k8s-run-mkbahk-20220617.yaml
 kubectl apply -f https://raw.githubusercontent.com/mkbahk/KubernetesLearning/main/K8STraining/nginxweb-k8s-run-mkbahk-20220617.yaml
 
 kubectl delete -f https://raw.githubusercontent.com/mkbahk/KubernetesLearning/main/K8STraining/nginxweb-k8s-run-mkbahk-20220617.yaml
+
+
+//POD에 서비스 연결하기(POD <- Service)
+kubectl apply -f nginxweb-Service.yaml
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginxweb-pod
+  labels:
+    "app": "nginxweb"
+spec:
+  #
+  hostname: nginx1210
+  subdomain: nginxweb-svc
+  #호스트 이름과 서브도메인이 K8s svc의 이름과 같은 경우로 지정된면 CoreDNS에 nginx2120.nginxweb-svc.default.svc.cluster.local 로 등록된다.
+  containers:
+  - name: nginx-container
+    image: mkbahk/nginx:1.21.0
+    ports:
+    - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginxweb-svc
+  #서비스 이름은 자동적으로 nginxweb-svc.default.svc.cluster.local로 등록됨
+spec:
+  selector:
+    "app": "nginxweb"
+  ports:
+  - protocol: TCP
+    port: 8780
+    targetPort: 80
+  type: LoadBalancer
+---
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl apply -f nginxweb-Service.yaml
+pod/nginxweb-pod created
+service/nginxweb-svc created
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get pods
+NAME                                      READY   STATUS              RESTARTS   AGE
+nfs-client-provisioner-759bc7f67b-scwtm   1/1     Running             0          9d
+nginxweb-pod                              0/1     ContainerCreating   0          9s
+test-nfs-pvc-pod-default                  0/1     Completed           0          9d
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get pods
+NAME                                      READY   STATUS      RESTARTS   AGE
+nfs-client-provisioner-759bc7f67b-scwtm   1/1     Running     0          9d
+nginxweb-pod                              1/1     Running     0          18s
+test-nfs-pvc-pod-default                  0/1     Completed   0          9d
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get svc
+NAME           TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)          AGE
+kubernetes     ClusterIP      10.96.0.1        <none>          443/TCP          9d
+nginxweb-svc   LoadBalancer   10.102.100.178   218.145.56.88   8780:32172/TCP   22s
+root@pod641:~/KubernetesLearning/K8sTraining#
+
+http://218.145.56.88:8780/
+
+
+
+//Deployment에 서비스 연결하기(Deployment -> ReplicaSet -> POD <- Service)
+
+kubectl apply -f nginxweb-Deployment-Service.yaml
+
+---
+apiVersion: apps/v1
+#kind: ReplicaSet
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      "app": "nginxweb"
+  template:
+    metadata:
+      name: nginxweb-pod
+      labels:
+        "app": "nginxweb"
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginxweb-svc
+spec:
+  #clusterIP: x.y.w.z
+  selector:
+    "app": "nginxweb"
+  ports:
+  - protocol: TCP
+    port: 8880
+    targetPort: 80
+  type: LoadBalancer
+---
+#LB공인IP->Server:8880 -> Deployment -> ReplicaSet->POD:80->Container:nginx:1.21:80 
+---
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl apply -f nginxweb-Deployment-Service.yaml
+deployment.apps/nginx-deployment created
+service/nginxweb-svc created
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get deployments.apps
+NAME                     READY   UP-TO-DATE   AVAILABLE   AGE
+nfs-client-provisioner   1/1     1            1           9d
+nginx-deployment         3/3     3            3           11s
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get replicasets.apps
+NAME                                DESIRED   CURRENT   READY   AGE
+nfs-client-provisioner-759bc7f67b   1         1         1       9d
+nginx-deployment-6d6c9f5c49         3         3         3       22s
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get pods
+NAME                                      READY   STATUS      RESTARTS   AGE
+nfs-client-provisioner-759bc7f67b-scwtm   1/1     Running     0          9d
+nginx-deployment-6d6c9f5c49-4w9bm         1/1     Running     0          28s
+nginx-deployment-6d6c9f5c49-jvwjj         1/1     Running     0          28s
+nginx-deployment-6d6c9f5c49-rm4qk         1/1     Running     0          28s
+test-nfs-pvc-pod-default                  0/1     Completed   0          9d
+
+root@pod641:~/KubernetesLearning/K8sTraining# kubectl get svc
+NAME           TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)          AGE
+kubernetes     ClusterIP      10.96.0.1        <none>          443/TCP          9d
+nginxweb-svc   LoadBalancer   10.104.122.219   218.145.56.88   8880:31475/TCP   33s
+root@pod641:~/KubernetesLearning/K8sTraining#
+
+
+//K8s Cluster에 소속되어 있는 master들 또는 Worker들에서는 Cluster-IP로 POD의 서비스 접근가능
+curl http://10.104.122.219:8880
+
+//Cluster의 외부에 있는 컴퓨터들은 공인IP와 지정 포트로 접근이 가능
+curl http://218.145.56.88:8880
 
 
 ==================================================================================
@@ -538,6 +690,7 @@ K8s API Version
   .ReplicationController  v1
   .services               v1
   .PersistentVolume       v1
+  ...
 
 kubectl api-versions
 kubectl api-resources
@@ -1198,7 +1351,6 @@ root@pod641:~/KubernetesLearning/K8STraining# kubectl get nodes -o wide
 NAME     STATUS   ROLES                  AGE   VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION       CONTAINER-RUNTIME
 pod641   Ready    control-plane,master   66d   v1.20.0   218.145.56.75   <none>        Ubuntu 18.04.6 LTS   4.15.0-175-generic   docker://19.3.8
 pod642   Ready    <none>                 66d   v1.20.0   218.145.56.76   <none>        Ubuntu 18.04.5 LTS   4.15.0-175-generic   docker://19.3.8
-root@pod641:~/KubernetesLearning/K8STraining#
 
 
 root@pod641:~/KubernetesLearning/K8STraining# kubectl get pods
@@ -1366,7 +1518,7 @@ K8s Controller: Cron Job
   .CronJob -> Job -> POD -> Container 형태로 연결
   .Scheuler Setting: 
     -"* * * * *", *=매xx
-    -시중분(0~59), 일중시간(0~23), 월중날(1~31), 년중월(1~12), 주중날(0~6, 0:일, 6:토)
+    -시간중분(0~59), 일중시간(0~23), 월중날(1~31), 년중월(1~12), 주중날(0~6, 0:일, 6:토)
     - * 부분은 */N, "N,N,...", "N-N" 형식으로 사용 가능
     -예1) 매월 30일 오후 23시 정각에 실행: "0 23 30 * *"
     -예2) 매주 일요일 0시 정각에 실행: "0 0 * * 0"
@@ -1841,8 +1993,6 @@ kubectl delete deployment nginx-v121stable-deployment
 
 
 
-
-
 =====================================================================================
 K8s Volume Mount
 =====================================================================================
@@ -2005,7 +2155,7 @@ spec:
 ---
 
 
-5) PVC-StorageClased PV-NFS AutoMount
+5) PVC-StorageClassGrouped PV-NFS AutoMount
 
 nano nginx-service-LoadBalancer-volume-mount.yaml
 ---
@@ -2075,5 +2225,5 @@ pvc-9818ecbc-bab8-4bc3-9f93-81e984a02ec4   1Gi        RWX            Delete     
 
 
 =====================================================================================
-K8s Volume Mount
+End of Documents
 =====================================================================================

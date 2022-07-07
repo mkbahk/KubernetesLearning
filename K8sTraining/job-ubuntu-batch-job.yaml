@@ -15,7 +15,7 @@ spec:
         command: ["bash"]
         args:
         - "-c"
-        - "echo 'Hello Ubuntu'; sleep 30; echo 'Job Done.'"
+        - "echo 'Hello Ubuntu, going to sleep 30 Sec.'; sleep 30; echo 'Job Done.'"
       #restartPolicy: Never
       restartPolicy: OnFailure
   backoffLimit: 3

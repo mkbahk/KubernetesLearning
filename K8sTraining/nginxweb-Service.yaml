@@ -20,6 +20,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nginxweb-svc
+  #서비스 이름은 자동적으로 nginxweb-svc.default.svc.cluster.local로 등록됨
 spec:
   selector:
     "app": "nginxweb"

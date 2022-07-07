@@ -71,5 +71,5 @@ spec:
     targetPort: 80
   type: ClusterIP
 ---
-# 위의 서비스로는 외부에서 직접 들어오지 않는다. 반드시 ingress-nginx-controller에서 지정된 공인IP로 들어와야 한다.
+# 위의 서비스는 ClusterIP로는 외부에서 이 서비스로 직접 들어오지 않는다. 반드시 ingress-nginx-controller에서 지정된 공인IP로 들어와야 한다.
 
