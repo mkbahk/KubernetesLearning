@@ -137,8 +137,9 @@ K8s Commands 기본 수행 구조
 kubectl --help
 kubectl command --help
 kubectl run <자원이름> <옵션>   //docker run
-#kubectl create -f file_name.yaml
 kubectl create -f file_name.yaml
+kubectl apply -f file_name.yaml
+kubectl delete -f file_name.yaml
 
 kubectl get <자원이름> <객체이름>
 kebectl edit <자원이름> <객체이름>
