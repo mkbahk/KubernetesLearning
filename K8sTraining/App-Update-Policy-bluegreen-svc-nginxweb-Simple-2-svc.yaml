@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginxweb-svc-bluegreen
+spec:
+  selector:
+    app: "nginxweb"
+    version: "1.21.0"
+  ports:
+  - protocol: TCP
+    port: 8780
+    targetPort: 80
+  type: LoadBalancer
+---
+

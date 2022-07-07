@@ -6,6 +6,7 @@ metadata:
 spec:
   selector:
     app: "nginxweb"
+    version: "1.23.0"
   ports:
   - protocol: TCP
     port: 8780

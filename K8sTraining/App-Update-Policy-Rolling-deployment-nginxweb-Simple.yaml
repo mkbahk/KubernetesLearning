@@ -6,8 +6,10 @@ metadata:
   name: nginx-deployment
 spec:
   replicas: 3
+###
   strategy:
     type: RollingUpdate
+###
   minReadySeconds: 10
   selector:
     matchLabels:
