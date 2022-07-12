@@ -1,0 +1,19 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: kongweb-svc-mapping
+  namespace: kong
+  annotations:
+    configuration.konghq.com: do-not-preserve-host
+spec:
+  ingressClassName: kong
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: ImplementationSpecific
+        backend:
+          serviceName: kongweb-svc
+          servicePort: 8787
+---

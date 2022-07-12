@@ -1,0 +1,17 @@
+#
+# kubectl apply -f https://bit.ly/k4k8s
+# 로 설치후에 아래 입력
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongIngress
+metadata:
+    name: do-not-preserve-host
+    namespace: kong
+route:
+  preserve_host: false
+upstream:
+  host_header: kongweb-svc.default.svc
+---
+#
+# kubectl annotate svc kongweb-svc  Ingress.kubernetes.io/service-upstream="true" -n kong
+#
