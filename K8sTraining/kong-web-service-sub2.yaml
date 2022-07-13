@@ -1,0 +1,31 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kongweb-sub2-pod
+  labels:
+    "app": "kongweb-sub2"
+  namespace: kong
+spec:
+  hostname: kongweb-sub2-pod
+  subdomain: kongweb-sub2-svc
+  containers:
+  - name: kongweb-sub2-container
+    image: mkbahk/kongnginx:latest
+    ports:
+    - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kongweb-svc
+  #서비스 이름은 자동적으로 kongweb-svc.default.svc.cluster.local로 등록됨
+  namespace: kong
+spec:
+  selector:
+    "app": "kongweb-sub2"
+  ports:
+  - protocol: TCP
+    port: 8789
+    targetPort: 80
+---
