@@ -5,7 +5,7 @@ metadata:
   name: kongweb-sub1-pod
   labels:
     "app": "kongweb-sub1"
-  namespace: kong
+  namespace: ingress-nginx
 spec:
   hostname: kongweb-sub1-pod
   subdomain: kongweb-sub1-svc
@@ -20,12 +20,12 @@ kind: Service
 metadata:
   name: kongweb-sub1-svc
   #서비스 이름은 자동적으로 kongweb-svc.default.svc.cluster.local로 등록됨
-  namespace: kong
+  namespace: ingress-nginx
 spec:
   selector:
     "app": "kongweb-sub1"
   ports:
   - protocol: TCP
-    port: 8788
+    port: 80
     targetPort: 80
 ---

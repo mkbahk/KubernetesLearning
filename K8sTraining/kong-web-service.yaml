@@ -7,10 +7,10 @@ metadata:
     "app": "kongweb"
   namespace: kong
 spec:
-  hostname: kongweb-pod
-  subdomain: kongweb-svc
+  hostname: kongweb-main-pod
+  subdomain: kongweb-main-svc
   containers:
-  - name: kong-container
+  - name: kongweb-container
     image: mkbahk/kongnginx:latest
     ports:
     - containerPort: 80
