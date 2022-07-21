@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: mk-nginx-deployment
 spec:
-  replicas: 3
+  replicas: 6
   strategy:
     type: RollingUpdate
   selector:
