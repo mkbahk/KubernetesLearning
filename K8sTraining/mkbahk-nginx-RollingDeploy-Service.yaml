@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: mk-nginx-container
-        image: mkbahk/nginx:1.21.0
+        image: mkbahk/nginx:1.22.0
         ports:
         - containerPort: 80
 ---
