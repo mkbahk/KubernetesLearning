@@ -1,0 +1,39 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mk-nginx-deployment
+  namespace: ingress-nginx
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      "app": "mknginxweb"
+  template:
+    metadata:
+      name: mk-nginxweb-pod
+      labels:
+        "app": "mknginxweb"
+    spec:
+      containers:
+      - name: mk-nginx-container
+        image: mkbahk/nginx:1.21.0
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mk-nginxweb-svc
+  namespace: ingress-nginx
+spec:
+  selector:
+    "app": "mknginxweb"
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+---

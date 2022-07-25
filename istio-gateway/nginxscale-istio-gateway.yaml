@@ -1,0 +1,35 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: nginxscale-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "218.145.56.84"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: nginxscale
+spec:
+  hosts:
+  - '*'
+  gateways:
+  - nginxscale-gateway
+  http:
+  - match:
+    - uri:
+        exact: /nginxscale
+    route:
+    - destination:
+        port:
+          number: 80
+        host: nginxscale-svc
+---

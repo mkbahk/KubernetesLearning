@@ -2,19 +2,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mk-nginx-deployment
+  name: mk-nginx-deploy-1-21-0
+  labels:
+    app: nginxweb
+    version: "1.21.0"
 spec:
-  replicas: 30
+  replicas: 3
   strategy:
     type: RollingUpdate
   selector:
     matchLabels:
-      "app": "mknginxweb"
+      app: mknginxweb
   template:
     metadata:
-      name: mk-nginxweb-pod
+      name: mk-nginxweb-pod-121
       labels:
-        "app": "mknginxweb"
+        app: mknginxweb
+        version: "1.21.0"
     spec:
       containers:
       - name: mk-nginx-container
@@ -22,16 +26,75 @@ spec:
         ports:
         - containerPort: 80
 ---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mk-nginx-deploy-1-22-0
+  labels:
+    app: nginxweb
+    version: "1.22.0"
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: mknginxweb
+  template:
+    metadata:
+      name: mk-nginxweb-pod-122
+      labels:
+        app: mknginxweb
+        version: "1.22.0"
+    spec:
+      containers:
+      - name: mk-nginx-container
+        image: mkbahk/nginx:1.22.0
+        ports:
+        - containerPort: 80
+---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mk-nginx-deploy-1-23-0
+  labels:
+    app: nginxweb
+    version: "1.23.0"
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: mknginxweb
+  template:
+    metadata:
+      name: mk-nginxweb-pod-123
+      labels:
+        app: mknginxweb
+        version: "1.23.0"
+    spec:
+      containers:
+      - name: mk-nginx-container
+        image: mkbahk/nginx:1.23.0
+        ports:
+        - containerPort: 80
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: mk-nginxweb-svc
+  labels:
+    app: mkngixweb
+    service: mknginxweb-svc
 spec:
   selector:
     "app": "mknginxweb"
   ports:
-  - protocol: TCP
+  - name: http
+    protocol: TCP
     port: 80
     targetPort: 80
-  type: LoadBalancer
 ---

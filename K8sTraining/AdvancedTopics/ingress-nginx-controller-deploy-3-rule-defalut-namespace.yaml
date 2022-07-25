@@ -1,0 +1,25 @@
+---
+#apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-nginx-rule-default-ns
+  namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  # ingress-nginx-controller와 연결고리
+  ingressClassName: nginx
+  # ingress-nginx-controller와 연결고리
+  # ingress-nginx-controller의 공인 IP로 들어오면 URL Redirect에 의해 아래 내부 K8s svc로 Redirector해 줌
+  rules:
+  - http:
+      paths:
+      - path: /mknginxweb
+        pathType: Prefix
+        backend:
+          service: 
+            name: mk-nginxweb-svc
+            port: 
+              number: 80
+---

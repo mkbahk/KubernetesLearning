@@ -1,0 +1,35 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: nginxwebdemo-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "218.145.56.84"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: nginxwebdemo
+spec:
+  hosts:
+  - '*'
+  gateways:
+  - nginxwebdemo-gateway
+  http:
+  - match:
+    - uri:
+        exact: /nginxwebdemo
+    route:
+    - destination:
+        port:
+          number: 8380
+        host: nginxwebdemo-svc
+---
