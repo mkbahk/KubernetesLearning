@@ -1,0 +1,133 @@
+---
+#
+# 아래 hostname resolu
+#
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mk-nginx-deploy-1-21-0
+  labels:
+    app: nginxweb
+    version: "v1.21.0"
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: mknginxweb
+  template:
+    metadata:
+      name: mk-nginxweb-pod-121
+      labels:
+        app: mknginxweb
+        version: "v1.21.0"
+    spec:
+      containers:
+      - name: mk-nginx-container
+        image: mkbahk/nginx:1.21.0
+        ports:
+        - containerPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mk-nginx-deploy-1-22-0
+  labels:
+    app: nginxweb
+    version: "v1.22.0"
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: mknginxweb
+  template:
+    metadata:
+      name: mk-nginxweb-pod-122
+      labels:
+        app: mknginxweb
+        version: "v1.22.0"
+    spec:
+      containers:
+      - name: mk-nginx-container
+        image: mkbahk/nginx:1.22.0
+        ports:
+        - containerPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mk-nginx-deploy-1-23-0
+  labels:
+    app: nginxweb
+    version: "v1.23.0"
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: mknginxweb
+  template:
+    metadata:
+      name: mk-nginxweb-pod-123
+      labels:
+        app: mknginxweb
+        version: "v1.23.0"
+    spec:
+      containers:
+      - name: mk-nginx-container
+        image: mkbahk/nginx:1.23.0
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mk-nginxweb-svc
+  labels:
+    app: mkngixweb
+    service: mknginxweb-svc
+spec:
+  selector:
+    "app": "mknginxweb"
+  ports:
+  - name: http
+    protocol: TCP
+    port: 8380
+    targetPort: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: mknginxweb-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: mknginxweb-vs
+spec:
+  hosts:
+  - 'www.mknginxweb.com'
+  gateways:
+  - mknginxweb-gateway
+  http:
+    route:
+    - destination:
+        host: mknginxweb-svc
+        port:
+          number: 8380
+---

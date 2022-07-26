@@ -1,0 +1,35 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: mknginxweb-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: mknginxweb
+spec:
+  hosts:
+  - "www.mknginxweb.com"
+  gateways:
+  - mknginxweb-gateway
+  http:
+  #- match:
+    #- uri:
+        #exact: /mkngixweb
+  - route:
+    - destination:
+        port:
+          number: 80
+        host: mk-nginxweb-svc
+---
