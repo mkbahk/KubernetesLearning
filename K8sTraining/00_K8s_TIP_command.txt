@@ -29,6 +29,28 @@ nslookup ip-ip-ip-ip.default.pod.cluster.local
 
 
 
-//log 찍을 때 실시간 로그도 같이 보고 -f
-kubectl logs pod명 -f
+//log 찍을 때 실시간 로그도 같이 보고 -f, 일단 로그 전체보여주고 기다리고 있으면서 새로 추가된 로그들 표시
+kubectl logs -f pod명
+
+//100회 동안 특별한 명령어 수행
+###
+### test.sh
+###
+#!/bin/bash
+for i in $(seq 1 100); 
+  do 
+    curl -s -o /dev/nul "http://localhost/productpage"; 
+  done 
+###
+
+//연속적으로 호출
+while true; 
+  do 
+    curl http://dsafdsa/fdsa; 
+    sleep 0.1; 
+  done
+
+
+
+
 
