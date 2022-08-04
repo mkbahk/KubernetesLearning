@@ -5,7 +5,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 3
+  replicas: 10
   selector:
     matchLabels:
       "app": "nginxweb"
@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: nginx-container
-        image: nginx:1.21
+        image: nginx:1.22
         ports:
         - containerPort: 80
 ---

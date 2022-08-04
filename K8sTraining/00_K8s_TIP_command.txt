@@ -50,6 +50,16 @@ while true;
     sleep 0.1; 
   done
 
+//네트워크 상태복
+netstat -naplt
+netstat -nltp
+ss -lpt
+
+//Unix Domain Socket
+netstat -anop
+
+
+
 
 
 
